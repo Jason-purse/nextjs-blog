@@ -3,13 +3,16 @@ import { Header } from "@/components/header";
 import { getAllPosts, getAllTags } from "@/lib/blog";
 
 interface BlogPageProps {
-  searchParams: Promise<{ tag?: string; q?: string }>;
+  searchParams: Promise<{ tag?: string; q?: string; page?: string }>;
 }
+
+const POSTS_PER_PAGE = 6;
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const params = await searchParams;
   const tag = params.tag;
   const query = params.q;
+  const currentPage = parseInt(params.page || "1", 10);
 
   let posts = getAllPosts();
   const allTags = getAllTags();
@@ -29,6 +32,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         post.tags.some((t) => t.toLowerCase().includes(lowerQuery))
     );
   }
+
+  // Pagination
+  const totalPosts = posts.length;
+  const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+  const paginatedPosts = posts.slice(startIndex, startIndex + POSTS_PER_PAGE);
 
   return (
     <div className="min-h-screen">
@@ -100,12 +109,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
         {/* Posts List */}
         <div className="space-y-6">
-          {posts.length === 0 ? (
+          {paginatedPosts.length === 0 ? (
             <p className="py-12 text-center text-muted-foreground">
               No posts found. Try a different search or tag.
             </p>
           ) : (
-            posts.map((post) => (
+            paginatedPosts.map((post) => (
               <article
                 key={post.slug}
                 className="group border-b border-border pb-6 last:border-0"
@@ -147,6 +156,47 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <nav className="mt-12 flex items-center justify-center gap-4">
+            {currentPage > 1 ? (
+              <Link
+                href={`/blog?${new URLSearchParams({
+                  ...(tag && { tag }),
+                  ...(query && { q: query }),
+                  page: String(currentPage - 1),
+                }).toString()}`}
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary"
+              >
+                ← Previous
+              </Link>
+            ) : (
+              <span className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground">
+                ← Previous
+              </span>
+            )}
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            {currentPage < totalPages ? (
+              <Link
+                href={`/blog?${new URLSearchParams({
+                  ...(tag && { tag }),
+                  ...(query && { q: query }),
+                  page: String(currentPage + 1),
+                }).toString()}`}
+                className="rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary"
+              >
+                Next →
+              </Link>
+            ) : (
+              <span className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted-foreground">
+                Next →
+              </span>
+            )}
+          </nav>
+        )}
       </main>
 
       {/* Footer */}

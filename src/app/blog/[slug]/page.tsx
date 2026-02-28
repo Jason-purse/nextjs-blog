@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { getPostBySlug, getAllPosts } from "@/lib/blog";
 import { MDXContent } from "@/components/mdx-content";
+import { CommentSection } from "@/components/comment-section";
+import { ViewCount } from "@/components/view-count";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -90,6 +92,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </time>
                 <span>·</span>
                 <span>{post.readingTime}</span>
+                <span>·</span>
+                <ViewCount slug={slug} />
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {post.tags.map((tag) => (
@@ -138,6 +142,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <div />
               )}
             </nav>
+
+            {/* Comments */}
+            <CommentSection slug={slug} />
           </article>
 
           {/* Table of Contents - Desktop */}

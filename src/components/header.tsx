@@ -30,6 +30,12 @@ export function Header() {
             Blog
           </Link>
           <Link
+            href="/archives"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Archives
+          </Link>
+          <Link
             href="/about"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
