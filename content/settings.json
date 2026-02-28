@@ -1,0 +1,10 @@
+{
+  "title": "Jasonj Blog",
+  "supportedLanguages": [
+    "zh",
+    "en"
+  ],
+  "defaultLanguage": "zh",
+  "githubContentRepo": "",
+  "translationEnabled": false
+}

@@ -8,14 +8,21 @@ interface Settings {
   title: string;
   supportedLanguages: string[];
   defaultLanguage: string;
-  githubContentRepo: string;
   translationEnabled: boolean;
+  translationApi: string;
 }
 
 const AVAILABLE_LANGUAGES = [
   { code: "zh", label: "Chinese (中文)" },
   { code: "en", label: "English" },
   { code: "ja", label: "Japanese (日本語)" },
+  { code: "ko", label: "Korean (한국어)" },
+];
+
+const TRANSLATION_APIS = [
+  { value: "minimax", label: "MiniMax" },
+  { value: "openai", label: "OpenAI" },
+  { value: "deepl", label: "DeepL" },
 ];
 
 export default function SettingsPage() {
@@ -27,8 +34,8 @@ export default function SettingsPage() {
     title: "Zen Blog",
     supportedLanguages: ["zh", "en"],
     defaultLanguage: "zh",
-    githubContentRepo: "",
     translationEnabled: false,
+    translationApi: "minimax",
   });
 
   useEffect(() => {
@@ -141,18 +148,10 @@ export default function SettingsPage() {
             </select>
           </div>
 
-          {/* GitHub Content Repo */}
-          <div>
-            <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500 }}>GitHub Content Repo</label>
-            <input
-              type="text"
-              placeholder="e.g., user/blog-content"
-              value={settings.githubContentRepo}
-              onChange={(e) => setSettings({ ...settings, githubContentRepo: e.target.value })}
-              style={{ width: "100%", padding: "10px 12px", fontSize: 16, border: "1px solid var(--border)", borderRadius: 4, background: "var(--background)", color: "var(--foreground)" }}
-            />
-            <p style={{ marginTop: 6, fontSize: 12, color: "var(--muted-foreground)" }}>
-              Set GITHUB_CONTENT_REPO env var to enable GitHub storage
+          {/* GitHub Storage Info */}
+          <div style={{ padding: 16, background: "var(--muted)", borderRadius: 6, border: "1px solid var(--border)" }}>
+            <p style={{ margin: 0, fontSize: 14, color: "var(--foreground)", lineHeight: 1.6 }}>
+              GitHub storage is configured via environment variables (<code style={{ background: "var(--background)", padding: "2px 6px", borderRadius: 3, fontSize: 12 }}>GITHUB_TOKEN</code>, <code style={{ background: "var(--background)", padding: "2px 6px", borderRadius: 3, fontSize: 12 }}>GITHUB_CONTENT_REPO</code>) in your Vercel dashboard. These are not editable here for security reasons.
             </p>
           </div>
 
@@ -167,6 +166,22 @@ export default function SettingsPage() {
               />
               Enable Translation
             </label>
+          </div>
+
+          {/* Translation API */}
+          <div>
+            <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500 }}>Translation API</label>
+            <select
+              value={settings.translationApi}
+              onChange={(e) => setSettings({ ...settings, translationApi: e.target.value })}
+              style={{ width: "100%", padding: "10px 12px", fontSize: 16, border: "1px solid var(--border)", borderRadius: 4, background: "var(--background)", color: "var(--foreground)" }}
+            >
+              {TRANSLATION_APIS.map((api) => (
+                <option key={api.value} value={api.value}>
+                  {api.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Save Button */}

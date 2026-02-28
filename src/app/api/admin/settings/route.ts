@@ -8,8 +8,8 @@ const DEFAULT_SETTINGS = {
   title: "Zen Blog",
   supportedLanguages: ["zh", "en"],
   defaultLanguage: "zh",
-  githubContentRepo: "",
   translationEnabled: false,
+  translationApi: "minimax",
 };
 
 function checkAuth(request: NextRequest): boolean {
@@ -46,6 +46,7 @@ export async function PUT(request: NextRequest) {
   const body = await request.json();
 
   // Validate and sanitize settings
+  const validApis = ["minimax", "openai", "deepl"];
   const settings = {
     title: body.title || DEFAULT_SETTINGS.title,
     supportedLanguages: Array.isArray(body.supportedLanguages)
@@ -55,8 +56,10 @@ export async function PUT(request: NextRequest) {
       body.defaultLanguage && body.supportedLanguages?.includes(body.defaultLanguage)
         ? body.defaultLanguage
         : DEFAULT_SETTINGS.defaultLanguage,
-    githubContentRepo: body.githubContentRepo || "",
     translationEnabled: Boolean(body.translationEnabled),
+    translationApi: validApis.includes(body.translationApi)
+      ? body.translationApi
+      : DEFAULT_SETTINGS.translationApi,
   };
 
   await storage.write(SETTINGS_FILE, JSON.stringify(settings, null, 2));
