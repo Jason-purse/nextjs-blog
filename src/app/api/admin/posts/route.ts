@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   if (slug) {
     try {
-      const post = getPostBySlug(slug);
+      const post = await getPostBySlug(slug);
       const raw = await storage.read(`${POSTS_DIR}/${slug}.mdx`);
       return NextResponse.json({ ...post, raw: raw || "" });
     } catch {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   return NextResponse.json(posts);
 }
 
