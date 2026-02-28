@@ -8,7 +8,7 @@ interface SearchPageProps {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
 
   return (
     <>

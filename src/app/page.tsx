@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { getFeaturedPosts } from "@/lib/blog";
 
-export default function Home() {
-  const featuredPosts = getFeaturedPosts(3);
+export default async function Home() {
+  const featuredPosts = await getFeaturedPosts(3);
 
   return (
     <div className="min-h-screen">

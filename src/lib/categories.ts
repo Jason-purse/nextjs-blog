@@ -1,4 +1,4 @@
-import { getAllPosts, getPostsByCategory, getCategoryPostCount } from "./blog";
+import { getAllPosts, getPostsByCategory } from "./blog";
 
 export interface Category {
   name: string;
@@ -6,16 +6,13 @@ export interface Category {
   postCount: number;
 }
 
-export function getAllCategories(): Category[] {
-  const posts = getAllPosts();
+export async function getAllCategories(): Promise<Category[]> {
+  const posts = await getAllPosts();
   const categoryMap = new Map<string, number>();
 
   posts.forEach((post) => {
     if (post.category) {
-      categoryMap.set(
-        post.category,
-        (categoryMap.get(post.category) || 0) + 1
-      );
+      categoryMap.set(post.category, (categoryMap.get(post.category) || 0) + 1);
     }
   });
 
@@ -28,15 +25,9 @@ export function getAllCategories(): Category[] {
     .sort((a, b) => b.postCount - a.postCount);
 }
 
-export function getPostsByCategorySlug(categorySlug: string) {
-  const categories = getAllCategories();
+export async function getPostsByCategorySlug(categorySlug: string) {
+  const categories = await getAllCategories();
   const category = categories.find((c) => c.slug === categorySlug);
-
-  if (!category) {
-    return null;
-  }
-
+  if (!category) return null;
   return getPostsByCategory(category.name);
 }
-
-export { getCategoryPostCount };

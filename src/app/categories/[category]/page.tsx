@@ -8,19 +8,15 @@ interface CategoryPageProps {
 }
 
 export async function generateStaticParams() {
-  const categories = getAllCategories();
+  const categories = await getAllCategories();
   return categories.map((category) => ({ category: category.slug }));
 }
 
 export async function generateMetadata({ params }: CategoryPageProps) {
   const { category } = await params;
-  const categories = getAllCategories();
+  const categories = await getAllCategories();
   const foundCategory = categories.find((c) => c.slug === category);
-
-  if (!foundCategory) {
-    return { title: "Category Not Found" };
-  }
-
+  if (!foundCategory) return { title: "Category Not Found" };
   return {
     title: `${foundCategory.name} | Categories`,
     description: `Browse all ${foundCategory.name} articles`,
@@ -29,14 +25,10 @@ export async function generateMetadata({ params }: CategoryPageProps) {
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { category } = await params;
-  const categories = getAllCategories();
+  const categories = await getAllCategories();
   const foundCategory = categories.find((c) => c.slug === category);
-
-  if (!foundCategory) {
-    notFound();
-  }
-
-  const posts = getPostsByCategorySlug(category);
+  if (!foundCategory) notFound();
+  const posts = await getPostsByCategorySlug(category);
 
   return (
     <div className="min-h-screen">

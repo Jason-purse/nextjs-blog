@@ -1,9 +1,9 @@
 import { getAllPosts } from "@/lib/blog";
 import { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const posts = getAllPosts();
-  const baseUrl = "https://zen-blog.example.com"; // Will be overridden by the actual domain
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await getAllPosts();
+  const baseUrl = "https://zen-blog.example.com";
 
   const postUrls = posts.map((post) => ({
     url: `/blog/${post.slug}`,

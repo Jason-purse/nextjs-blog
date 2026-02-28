@@ -7,28 +7,23 @@ interface GiscusCommentsProps {
 }
 
 export function GiscusComments({ identifier }: GiscusCommentsProps) {
-  // TODO: Update repo, repoId, categoryId from https://giscus.app
   return (
     <div className="mt-16 border-t border-border pt-8">
       <h2 className="font-heading text-2xl font-semibold mb-6">
         Comments
       </h2>
       <Giscus
-        // TODO: Replace with your actual repo in format "owner/repo"
-        repo="jasonj/minimax-blog"
-        // TODO: Replace with your actual repoId from giscus.app
-        repoId="PLACEHOLDER_REPO_ID"
-        // TODO: Replace with your actual category name
+        repo="Jason-purse/nextjs-blog"
+        repoId="R_kgDORbLmXQ"
         category="Announcements"
-        // TODO: Replace with your actual categoryId from giscus.app
-        categoryId="PLACEHOLDER_CATEGORY_ID"
+        categoryId="DIC_kwDORbLmXc4C3aJl"
         mapping="pathname"
         strict="0"
         reactionsEnabled="1"
         emitMetadata="0"
         inputPosition="top"
         theme="preferred_color_scheme"
-        lang="en"
+        lang="zh-CN"
         loading="lazy"
         {...(identifier && { identifier })}
       />

@@ -13,14 +13,14 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
   try {
-    const post = getPostBySlug(slug);
+    const post = await getPostBySlug(slug);
     return {
       title: post.title,
       description: post.description,
@@ -42,12 +42,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   let post;
   try {
-    post = getPostBySlug(slug);
+    post = await getPostBySlug(slug);
   } catch {
     notFound();
   }
 
-  const allPosts = getAllPosts();
+  const allPosts = await getAllPosts();
   const currentIndex = allPosts.findIndex((p) => p.slug === slug);
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;

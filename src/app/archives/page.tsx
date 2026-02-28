@@ -13,7 +13,7 @@ interface YearMonth {
   }[];
 }
 
-function groupPostsByYearMonth(posts: ReturnType<typeof getAllPosts>): YearMonth[] {
+function groupPostsByYearMonth(posts: Awaited<ReturnType<typeof getAllPosts>>): YearMonth[] {
   const groups: Map<string, YearMonth> = new Map();
 
   const monthNames = [
@@ -55,8 +55,8 @@ function groupPostsByYearMonth(posts: ReturnType<typeof getAllPosts>): YearMonth
   );
 }
 
-export default function ArchivesPage() {
-  const posts = getAllPosts();
+export default async function ArchivesPage() {
+  const posts = await getAllPosts();
   const groupedPosts = groupPostsByYearMonth(posts);
 
   return (

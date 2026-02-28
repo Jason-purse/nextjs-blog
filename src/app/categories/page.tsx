@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { getAllCategories } from "@/lib/categories";
 
-export default function CategoriesPage() {
-  const categories = getAllCategories();
+export default async function CategoriesPage() {
+  const categories = await getAllCategories();
 
   return (
     <div className="min-h-screen">

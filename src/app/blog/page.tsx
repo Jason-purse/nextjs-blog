@@ -14,8 +14,8 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const query = params.q;
   const currentPage = parseInt(params.page || "1", 10);
 
-  let posts = getAllPosts();
-  const allTags = getAllTags();
+  let posts = await getAllPosts();
+  const allTags = await getAllTags();
 
   // Filter by tag
   if (tag) {
