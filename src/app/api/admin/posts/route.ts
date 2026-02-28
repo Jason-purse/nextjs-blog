@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateToken } from "@/lib/auth";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
-import fs from "fs";
-import path from "path";
+import { storage } from "@/lib/storage";
 
-const POSTS_DIR = path.join(process.cwd(), "content/posts");
+const POSTS_DIR = "posts";
 
 function checkAuth(request: NextRequest): boolean {
   const token = request.cookies.get("admin_token")?.value;
@@ -22,9 +21,8 @@ export async function GET(request: NextRequest) {
   if (slug) {
     try {
       const post = getPostBySlug(slug);
-      const filePath = path.join(POSTS_DIR, `${slug}.mdx`);
-      const raw = fs.readFileSync(filePath, "utf-8");
-      return NextResponse.json({ ...post, raw });
+      const raw = await storage.read(`${POSTS_DIR}/${slug}.mdx`);
+      return NextResponse.json({ ...post, raw: raw || "" });
     } catch {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
@@ -46,8 +44,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const filePath = path.join(POSTS_DIR, `${slug}.mdx`);
-  if (fs.existsSync(filePath)) {
+  const filePath = `${POSTS_DIR}/${slug}.mdx`;
+  const exists = await storage.exists(filePath);
+  if (exists) {
     return NextResponse.json({ error: "Post already exists" }, { status: 409 });
   }
 
@@ -60,7 +59,7 @@ tags: [${(tags || []).map((t: string) => `"${t}"`).join(", ")}]
 
 ${content}`;
 
-  fs.writeFileSync(filePath, frontmatter);
+  await storage.write(filePath, frontmatter);
   return NextResponse.json({ success: true, slug });
 }
 
@@ -72,8 +71,9 @@ export async function PUT(request: NextRequest) {
 
   const { slug, title, description, date, tags, content } = await request.json();
 
-  const filePath = path.join(POSTS_DIR, `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) {
+  const filePath = `${POSTS_DIR}/${slug}.mdx`;
+  const exists = await storage.exists(filePath);
+  if (!exists) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
@@ -86,7 +86,7 @@ tags: [${(tags || []).map((t: string) => `"${t}"`).join(", ")}]
 
 ${content}`;
 
-  fs.writeFileSync(filePath, frontmatter);
+  await storage.write(filePath, frontmatter);
   return NextResponse.json({ success: true });
 }
 
@@ -101,11 +101,12 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Missing slug" }, { status: 400 });
   }
 
-  const filePath = path.join(POSTS_DIR, `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) {
+  const filePath = `${POSTS_DIR}/${slug}.mdx`;
+  const exists = await storage.exists(filePath);
+  if (!exists) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
-  fs.unlinkSync(filePath);
+  await storage.delete(filePath);
   return NextResponse.json({ success: true });
 }

@@ -41,6 +41,7 @@ export default function AdminDashboard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 28 }}>Admin Dashboard</h1>
           <div style={{ display: "flex", gap: 12 }}>
+            <Link href="/admin/settings" style={{ padding: "8px 16px", border: "1px solid var(--border)", borderRadius: 4, fontSize: 14, color: "var(--foreground)", textDecoration: "none" }}>Settings</Link>
             <Link href="/" style={{ padding: "8px 16px", border: "1px solid var(--border)", borderRadius: 4, fontSize: 14, color: "var(--foreground)", textDecoration: "none" }}>View Site</Link>
             <Link href="/admin/new" style={{ padding: "8px 16px", background: "var(--primary)", color: "var(--primary-foreground)", borderRadius: 4, fontSize: 14, textDecoration: "none" }}>New Post</Link>
           </div>
