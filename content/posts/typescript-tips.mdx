@@ -1,0 +1,108 @@
+---
+title: "TypeScript Patterns That Changed My Code"
+date: "2024-01-25"
+description: "Essential TypeScript patterns every developer should know"
+tags: ["tech", "typescript", "coding"]
+coverImage: "/images/typescript.jpg"
+---
+
+# TypeScript Patterns That Changed My Code
+
+After years of writing TypeScript, I've discovered patterns that dramatically improved my code quality. These aren't obscure features—they're practical techniques that transformed how I write JavaScript.
+
+## Discriminated Unions
+
+One of TypeScript's most powerful features is the discriminated union. It turns optional chaos into type-safe certainty.
+
+```typescript
+type State =
+  | { status: "loading" }
+  | { status: "success"; data: string }
+  | { status: "error"; error: Error };
+
+function handleState(state: State) {
+  switch (state.status) {
+    case "loading":
+      return <Spinner />;
+    case "success":
+      return <Display data={state.data} />;
+    case "error":
+      return <Error message={state.error.message} />;
+  }
+}
+```
+
+The key is the **discriminator**—a common property (`status`) that TypeScript uses to narrow the type.
+
+## The Builder Pattern
+
+For complex object construction, the builder pattern provides an elegant API:
+
+```typescript
+class QueryBuilder {
+  private query = { where: {}, orderBy: {} };
+
+  where(condition: Record<string, unknown>) {
+    this.query.where = { ...this.query.where, ...condition };
+    return this;
+  }
+
+  orderBy(field: string, direction: "asc" | "desc" = "asc") {
+    this.query.orderBy = { [field]: direction };
+    return this;
+  }
+
+  build() {
+    return this.query;
+  }
+}
+
+// Usage
+const query = new QueryBuilder()
+  .where({ status: "active" })
+  .orderBy("createdAt", "desc")
+  .build();
+```
+
+## Utility Types
+
+TypeScript's built-in utility types are underutilized gems:
+
+```typescript
+// Make all properties optional
+type PartialUser = Partial<User>;
+
+// Make all properties required
+type CompleteUser = Required<User>;
+
+// Pick specific properties
+type UserPreview = Pick<User, "id" | "name">;
+
+// Make all properties readonly
+type FrozenUser = Readonly<User>;
+
+// Extract return type of a function
+type CreateUserReturn = ReturnType<typeof createUser>;
+```
+
+## The "as" Pattern
+
+Sometimes you know more than TypeScript. That's when the `as` assertion becomes your friend:
+
+```typescript
+// When you're certain of the type
+const value = unknownValue as string;
+
+// When narrowing within a type guard
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+```
+
+## Conclusion
+
+TypeScript isn't about adding complexity—it's about expressing intent clearly. These patterns help you do exactly that.
+
+> "Code is read much more often than it is written."
+
+Make it count.
