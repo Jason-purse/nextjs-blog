@@ -11,8 +11,10 @@ export interface PostMeta {
   date: string;
   description: string;
   tags: string[];
+  category?: string;
   coverImage?: string;
   readingTime?: string;
+  summary?: string;
 }
 
 export interface Post extends PostMeta {
@@ -39,7 +41,9 @@ export function getPostBySlug(slug: string): Post {
     date: data.date,
     description: data.description,
     tags: data.tags || [],
+    category: data.category,
     coverImage: data.coverImage,
+    summary: data.summary,
     content,
     readingTime: stats.text,
   };
@@ -56,7 +60,9 @@ export function getAllPosts(): PostMeta[] {
         date: post.date,
         description: post.description,
         tags: post.tags,
+        category: post.category,
         coverImage: post.coverImage,
+        summary: post.summary,
         readingTime: post.readingTime,
       };
     })
@@ -81,4 +87,25 @@ export function getAllTags(): string[] {
     post.tags.forEach((tag) => tags.add(tag));
   });
   return Array.from(tags).sort();
+}
+
+export function getAllCategories(): string[] {
+  const posts = getAllPosts();
+  const categories = new Set<string>();
+  posts.forEach((post) => {
+    if (post.category) {
+      categories.add(post.category);
+    }
+  });
+  return Array.from(categories).sort();
+}
+
+export function getPostsByCategory(category: string): PostMeta[] {
+  const posts = getAllPosts();
+  return posts.filter((post) => post.category === category);
+}
+
+export function getCategoryPostCount(category: string): number {
+  const posts = getAllPosts();
+  return posts.filter((post) => post.category === category).length;
 }

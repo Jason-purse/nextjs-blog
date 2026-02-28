@@ -1,19 +1,28 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Serif } from "next/font/google";
+import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const playfair = Playfair_Display({
+  variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
-const notoSerif = Noto_Serif({
-  variable: "--font-noto-serif",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "600", "700"],
+  weight: "variable",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -21,8 +30,8 @@ export const metadata: Metadata = {
     default: "Zen Blog",
     template: "%s | Zen Blog",
   },
-  description: "A minimalist blog inspired by Japanese Zen aesthetics",
-  keywords: ["blog", "tech", "coding", "lifestyle", "minimalist"],
+  description: "A minimalist blog inspired by Japanese Zen aesthetics - editorial design meets mindful writing",
+  keywords: ["blog", "tech", "coding", "lifestyle", "minimalist", "design"],
   authors: [{ name: "Zen Blogger" }],
   openGraph: {
     type: "website",
@@ -46,11 +55,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${notoSerif.variable} antialiased`}
+        className={`${playfair.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <ThemeProvider
           attribute="data-theme"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
