@@ -41,6 +41,18 @@ export function Header() {
           >
             About
           </Link>
+          <Link
+            href="/categories"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Categories
+          </Link>
+          <Link
+            href="/search"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Search
+          </Link>
 
           {mounted && (
             <button

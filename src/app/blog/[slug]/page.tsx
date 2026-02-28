@@ -5,6 +5,8 @@ import { getPostBySlug, getAllPosts } from "@/lib/blog";
 import { MDXContent } from "@/components/mdx-content";
 import { CommentSection } from "@/components/comment-section";
 import { ViewCount } from "@/components/view-count";
+import { AISummary } from "@/components/ai-summary";
+import { GiscusComments } from "@/components/giscus-comments";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -108,6 +110,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
             </div>
 
+            {/* AI Summary */}
+            <AISummary summary={post.summary || ""} />
+
             {/* Content */}
             <div className="prose">
               <MDXContent source={post.content} />
@@ -144,7 +149,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </nav>
 
             {/* Comments */}
-            <CommentSection slug={slug} />
+            <GiscusComments identifier={`/blog/${slug}`} />
           </article>
 
           {/* Table of Contents - Desktop */}
