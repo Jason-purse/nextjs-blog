@@ -19,7 +19,7 @@ export function Header() {
           href="/"
           className="font-serif text-xl font-semibold tracking-tight"
         >
-          Zen Blog
+          AI Blog
         </Link>
 
         <nav className="flex items-center gap-6">

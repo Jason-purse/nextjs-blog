@@ -31,7 +31,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [settings, setSettings] = useState<Settings>({
-    title: "Zen Blog",
+    title: "AI Blog",
     supportedLanguages: ["zh", "en"],
     defaultLanguage: "zh",
     translationEnabled: false,

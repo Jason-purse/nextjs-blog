@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Zen Blog</title>
+    <title>AI Blog</title>
     <link>${siteUrl}</link>
     <description>Thoughts on code, mindfulness, and the art of simple living.</description>
     <language>en-us</language>

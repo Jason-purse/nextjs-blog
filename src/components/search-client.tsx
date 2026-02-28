@@ -151,7 +151,7 @@ export function SearchClient({ initialPosts, initialQuery = "" }: SearchClientPr
 
       <footer className="border-t border-border py-8">
         <div className="mx-auto max-w-5xl px-4 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Zen Blog. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} AI Blog. All rights reserved.</p>
         </div>
       </footer>
     </div>

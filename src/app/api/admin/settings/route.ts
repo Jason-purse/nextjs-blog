@@ -5,7 +5,7 @@ import { storage } from "@/lib/storage";
 const SETTINGS_FILE = "settings.json";
 
 const DEFAULT_SETTINGS = {
-  title: "Zen Blog",
+  title: "AI Blog",
   supportedLanguages: ["zh", "en"],
   defaultLanguage: "zh",
   translationEnabled: false,

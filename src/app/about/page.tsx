@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "About Zen Blog — a journey through code and mindfulness",
+  description: "About AI Blog — a journey through code and mindfulness",
 };
 
 const timeline = [
@@ -33,7 +33,7 @@ const timeline = [
   },
   {
     year: "2024",
-    title: "Zen Blog",
+    title: "AI Blog",
     description:
       "Created this space to share thoughts on the intersection of technology, creativity, and mindful living.",
   },
@@ -169,7 +169,7 @@ export default function AboutPage() {
 
       <footer className="border-t border-border py-8">
         <div className="mx-auto max-w-5xl px-4 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Zen Blog. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} AI Blog. All rights reserved.</p>
         </div>
       </footer>
     </div>

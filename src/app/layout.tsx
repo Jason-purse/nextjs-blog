@@ -27,16 +27,16 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Zen Blog",
-    template: "%s | Zen Blog",
+    default: "AI Blog",
+    template: "%s | AI Blog",
   },
   description: "A minimalist blog inspired by Japanese Zen aesthetics - editorial design meets mindful writing",
   keywords: ["blog", "tech", "coding", "lifestyle", "minimalist", "design"],
-  authors: [{ name: "Zen Blogger" }],
+  authors: [{ name: "AI Blogger" }],
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Zen Blog",
+    siteName: "AI Blog",
   },
   twitter: {
     card: "summary_large_image",
