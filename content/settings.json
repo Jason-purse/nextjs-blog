@@ -81,7 +81,7 @@
         "verified": true,
         "category": "content",
         "enabled": true,
-        "installedAt": 1772352961283,
+        "installedAt": 1772353707614,
         "revalidation": {
           "mode": "immediate",
           "debounceSeconds": 0
@@ -102,6 +102,46 @@
         "category": "content",
         "enabled": true,
         "installedAt": 1772353317206,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "reading-time": {
+        "id": "reading-time",
+        "name": "阅读时间",
+        "version": "1.0.0",
+        "description": "自动计算并显示预计阅读时间",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772353618385,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "dark-mode": {
+        "id": "dark-mode",
+        "name": "深色模式切换",
+        "version": "1.0.0",
+        "description": "为博客添加深色/浅色模式切换按钮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772353729936,
         "revalidation": {
           "mode": "debounced",
           "debounceSeconds": 60

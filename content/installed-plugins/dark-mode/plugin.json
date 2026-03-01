@@ -1,0 +1,26 @@
+{
+  "id": "dark-mode",
+  "name": "深色模式切换",
+  "version": "1.0.0",
+  "icon": "🌙",
+  "description": "为博客添加深色/浅色模式切换按钮",
+  "longDescription": "为博客添加深色/浅色模式切换按钮，记忆用户偏好，支持跟随系统设置。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "ui",
+  "tags": ["dark", "theme", "toggle"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-dark-mode"
+    }
+  },
+  "slots": ["body"],
+  "config": {
+    "schema": {
+      "followSystem": { "type": "toggle", "label": "跟随系统设置", "default": true },
+      "position": { "type": "select", "label": "按钮位置", "default": "top-right", "options": [{"value":"top-right","label":"右上角"},{"value":"top-left","label":"左上角"}] }
+    }
+  },
+  "revalidation": { "mode": "debounced", "debounceSeconds": 60 }
+}

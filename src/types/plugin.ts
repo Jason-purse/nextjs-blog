@@ -62,6 +62,8 @@ export interface RegistryPlugin {
   comingSoon?: boolean          // 即将推出标记
   preview?: string              // 主题专用预览图
   revalidation: PluginRevalidation
+  allowedRoutes?: string[]
+  dependencies?: { required: string[]; recommended: string[] }
 }
 
 // settings.json 本地已安装记录

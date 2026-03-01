@@ -70,14 +70,25 @@ export default function PluginsPage() {
   }
 
   // ── 安装
-  async function install(id: string) {
+  async function install(id: string, withIds?: string[]) {
     setWorking(id)
-    const res = await fetch('/api/admin/plugins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'install' }) })
-    if (res.ok) {
-      const d = await res.json()
-      setPlugins(prev => prev.map(p => p.id === id ? { ...p, installed: true, enabled: true } : p))
-      if (d.revalidation?.mode === 'debounced') startCountdown(d.revalidation.debounceSeconds)
+
+    if (withIds && withIds.length > 0) {
+      // 批量安装：本插件 + 推荐依赖
+      const res = await fetch('/api/admin/plugins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id, ...withIds], action: 'install' }) })
+      if (res.ok) {
+        const allIds = [id, ...withIds]
+        setPlugins(prev => prev.map(p => allIds.includes(p.id) ? { ...p, installed: true, enabled: true } : p))
+      }
+    } else {
+      const res = await fetch('/api/admin/plugins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'install' }) })
+      if (res.ok) {
+        const d = await res.json()
+        setPlugins(prev => prev.map(p => p.id === id ? { ...p, installed: true, enabled: true } : p))
+        if (d.revalidation?.mode === 'debounced') startCountdown(d.revalidation.debounceSeconds)
+      }
     }
+
     setWorking(null)
   }
 
@@ -258,7 +269,7 @@ export default function PluginsPage() {
                       return (
                         <PluginRow key={p.id} plugin={p} working={working === p.id}
                           editing={edit}
-                          onInstall={() => install(p.id)}
+                          onInstall={(withIds) => install(p.id, withIds)}
                           onUninstall={() => uninstall(p.id)}
                           onToggle={() => toggleEnabled(p.id, !p.enabled)}
                           onEditReval={(patch) => setEditReval(prev => ({ ...prev, [p.id]: { ...prev[p.id], ...patch } }))}
@@ -328,7 +339,7 @@ function ThemeCard({ plugin: p, isActive, working, onInstall, onUninstall, onAct
 // ── 普通插件行
 function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onToggle, onEditReval, onSaveReval }: {
   plugin: PluginView; working: boolean; editing?: Partial<PluginRevalidation>
-  onInstall(): void; onUninstall(): void; onToggle(): void
+  onInstall(withIds?: string[]): void; onUninstall(): void; onToggle(): void
   onEditReval(patch: Partial<PluginRevalidation>): void; onSaveReval(): void
 }) {
   const router = useRouter()
@@ -336,6 +347,7 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
   const icon = p.icon || CATEGORY_META[p.category]?.icon || '🔌'
   const authorName = typeof p.author === 'string' ? p.author : (p.author?.name ?? '未知作者')
   const comingSoon = p.comingSoon ?? false
+  const recommendedDeps = p.dependencies?.recommended ?? []
 
   // 点击卡片（非按钮区域）跳转到详情页
   function handleCardClick(e: React.MouseEvent) {
@@ -345,6 +357,18 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
       return
     }
     router.push(`/admin/plugins/${p.id}`)
+  }
+
+  function handleInstall(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (recommendedDeps.length > 0) {
+      const confirmed = confirm(`同时安装推荐插件 ${recommendedDeps.join(', ')}？`)
+      if (confirmed) {
+        onInstall(recommendedDeps)
+        return
+      }
+    }
+    onInstall()
   }
 
   return (
@@ -400,6 +424,12 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {p.tags.map(t => <span key={t} style={{ fontSize: 11, padding: '1px 8px', borderRadius: 10, background: 'var(--secondary)', color: 'var(--muted-foreground)' }}>#{t}</span>)}
           </div>
+          {/* 推荐依赖 */}
+          {recommendedDeps.length > 0 && (
+            <div style={{ marginTop: 6, fontSize: 12, color: '#9ca3af' }}>
+              🔗 推荐同安: {recommendedDeps.join(', ')}
+            </div>
+          )}
           {/* 生效时间编辑（仅已安装） */}
           {p.installed && (
             <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -434,7 +464,7 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
               敬请期待
             </span>
           ) : !p.installed ? (
-            <button onClick={(e) => { e.stopPropagation(); onInstall(); }} disabled={working}
+            <button onClick={handleInstall} disabled={working}
               style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: 'var(--foreground)', color: 'var(--background)', fontSize: 13, cursor: working ? 'wait' : 'pointer', opacity: working ? 0.6 : 1 }}>
               {working ? '…' : '安装'}
             </button>

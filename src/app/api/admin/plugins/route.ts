@@ -223,7 +223,39 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: '未授权' }, { status: 401 })
 
-  const { id, action } = await req.json()
+  const { id, ids, action } = await req.json()
+
+  // 批量安装支持
+  if (ids && Array.isArray(ids) && action === 'install') {
+    const [ghReg, settings] = await Promise.all([fetchPluginsRegistry(), getSettings()])
+    const local = getLocalRegistry(settings)
+
+    for (const pid of ids as string[]) {
+      const meta = ghReg.plugins.find((p: RegistryPlugin) => p.id === pid)
+      if (!meta) continue
+      const cached = await cachePluginAssets(pid, meta.source)
+      local[pid] = {
+        id: pid, name: meta.name, version: meta.version, description: meta.description,
+        author: meta.author, verified: meta.verified, category: meta.category,
+        enabled: true, installedAt: Date.now(),
+        revalidation: meta.revalidation,
+        config: {},
+        assetsCached: cached,
+      } as InstalledPlugin & { assetsCached: boolean }
+      if (meta.category === 'theme') {
+        if (!settings.plugins) settings.plugins = {}
+        ;(settings.plugins as Record<string, unknown>).activeTheme = pid
+      }
+    }
+
+    if (!settings.plugins) settings.plugins = {}
+    ;(settings.plugins as Record<string, unknown>).registry = local
+    delete (settings.plugins as Record<string, unknown>).installed
+    await saveSettings(settings)
+    doRevalidate()
+    return NextResponse.json({ success: true, installed: ids })
+  }
+
   if (!id || !['install', 'uninstall'].includes(action))
     return NextResponse.json({ error: '参数错误' }, { status: 400 })
 

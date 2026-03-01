@@ -87,6 +87,8 @@ export async function GET() {
         slots:   (manifest.slots ?? []) as string[],
         config:  mergedConfig,
         cached:  !!(await storage.read(`installed-plugins/${id}/plugin.json`)),
+        allowedRoutes: (manifest.allowedRoutes as string[] | undefined) ?? ['*'],
+        dependencies: manifest.dependencies as { required: string[]; recommended: string[] } | undefined,
       }
     })
   )

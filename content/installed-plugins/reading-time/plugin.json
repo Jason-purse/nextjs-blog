@@ -1,0 +1,27 @@
+{
+  "id": "reading-time",
+  "name": "阅读时间",
+  "version": "1.0.0",
+  "icon": "⏱️",
+  "description": "自动计算并显示预计阅读时间",
+  "longDescription": "自动计算并显示预计阅读时间，基于文章字数和你设定的阅读速度。适合展示在文章 meta 信息中。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "content",
+  "tags": ["reading", "time", "ux"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-reading-time"
+    }
+  },
+  "slots": ["article-meta"],
+  "config": {
+    "schema": {
+      "wpm": { "type": "number", "label": "阅读速度(字/分)", "default": 300 },
+      "prefix": { "type": "text", "label": "前缀文字", "default": "预计阅读" },
+      "unit": { "type": "text", "label": "单位", "default": "分钟" }
+    }
+  },
+  "revalidation": { "mode": "immediate", "debounceSeconds": 0 }
+}
