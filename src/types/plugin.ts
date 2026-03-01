@@ -1,5 +1,31 @@
 // src/types/plugin.ts
 
+// ── 插件配置 Schema ──────────────────────────────────────────────
+
+export type ConfigFieldType = 'color' | 'range' | 'select' | 'text' | 'number' | 'toggle'
+
+interface ConfigFieldBase {
+  type: ConfigFieldType
+  label: string
+  cssVar?: string   // 注入为 CSS 变量，如 --rp-color
+  attr?: string     // 注入为 WC attribute
+}
+interface ColorField    extends ConfigFieldBase { type: 'color';  default: string }
+interface RangeField    extends ConfigFieldBase { type: 'range';  default: number; min: number; max: number; unit?: string }
+interface SelectField   extends ConfigFieldBase { type: 'select'; default: string; options: { value: string; label: string }[] }
+interface TextField     extends ConfigFieldBase { type: 'text';   default: string; placeholder?: string }
+interface NumberField   extends ConfigFieldBase { type: 'number'; default: number; min?: number; max?: number }
+interface ToggleField   extends ConfigFieldBase { type: 'toggle'; default: boolean }
+
+export type ConfigField = ColorField | RangeField | SelectField | TextField | NumberField | ToggleField
+
+export type ConfigSchema = Record<string, ConfigField>
+
+// plugin.json 中的 config 节
+export interface PluginConfigSpec {
+  schema: ConfigSchema
+}
+
 export type RevalidationMode = 'immediate' | 'debounced'
 
 export interface PluginRevalidation {

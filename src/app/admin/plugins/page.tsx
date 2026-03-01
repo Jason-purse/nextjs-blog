@@ -394,6 +394,8 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
                 <span style={{ position: 'absolute', top: 2, left: p.enabled ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
               </button>
               <span style={{ fontSize: 12, color: 'var(--muted-foreground)', minWidth: 28 }}>{p.enabled ? '启用' : '停用'}</span>
+              <a href={`/admin/plugins/${p.id}`}
+                style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)', textDecoration: 'none' }}>配置</a>
               <button onClick={onUninstall} disabled={working}
                 style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid #fca5a5', background: 'transparent', color: '#dc2626', cursor: 'pointer' }}>卸载</button>
             </>
