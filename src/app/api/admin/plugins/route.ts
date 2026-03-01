@@ -1,5 +1,5 @@
 // src/app/api/admin/plugins/route.ts
-// 插件管理 API：列出注册表插件 + 安装/停用
+// 插件管理 API：列出注册表插件 + 安装/停用 + 按策略 revalidate
 
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
@@ -22,7 +22,6 @@ async function saveSettings(settings: Record<string, unknown>) {
   await storage.write(SETTINGS_FILE, JSON.stringify(settings, null, 2))
 }
 
-// 从注册表仓库拉 registry.json
 async function fetchRegistry() {
   const repo   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-themes'
   const branch = process.env.GITHUB_THEMES_BRANCH ?? 'main'
@@ -57,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   const themes = (registry.themes ?? []).map((t: Record<string, unknown>) => ({
     ...t,
-    installed: true, // 内置主题默认已安装
+    installed: true,
     active: (settings.theme ?? 'editorial') === t.id,
   }))
 
@@ -68,24 +67,43 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return NextResponse.json({ error: '未授权' }, { status: 401 })
 
-  const { id, action } = await req.json() // action: 'install' | 'uninstall'
+  const { id, action } = await req.json()
   if (!id || !['install', 'uninstall'].includes(action)) {
     return NextResponse.json({ error: '参数错误' }, { status: 400 })
   }
 
+  // 拿插件 revalidation 策略
+  const registry = await fetchRegistry()
+  const pluginMeta = (registry.plugins ?? []).find(
+    (p: Record<string, unknown>) => p.id === id
+  ) as Record<string, unknown> | undefined
+  const revalidation = (pluginMeta?.revalidation as Record<string, unknown>) ?? { mode: 'immediate' }
+
+  // 更新 settings
   const settings = await getSettings()
   const installed: string[] = settings.plugins?.installed ?? []
-
   const next = action === 'install'
     ? [...new Set([...installed, id])]
     : installed.filter((x: string) => x !== id)
-
   settings.plugins = { ...(settings.plugins ?? {}), installed: next }
   await saveSettings(settings)
 
-  // 主动让所有博客页面缓存失效，插件开关立刻生效
-  revalidatePath('/blog', 'layout')
-  revalidatePath('/blog/[slug]', 'page')
+  // 按策略决定是否立刻 revalidate
+  const shouldRevalidateNow = revalidation.mode === 'immediate'
+  if (shouldRevalidateNow) {
+    revalidatePath('/blog', 'layout')
+    revalidatePath('/blog/[slug]', 'page')
+  }
 
-  return NextResponse.json({ success: true, installed: next })
+  return NextResponse.json({
+    success: true,
+    installed: next,
+    revalidation: {
+      mode: revalidation.mode,
+      // debounced 时把 debounceSeconds 返回给客户端，由客户端倒计时
+      debounceSeconds: revalidation.mode === 'debounced'
+        ? (revalidation.debounceSeconds as number ?? 120)
+        : 0,
+    },
+  })
 }
