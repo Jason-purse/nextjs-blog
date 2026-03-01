@@ -82,6 +82,7 @@ export async function GET() {
       return {
         id,
         source,
+        version: (manifest.version as string | undefined) ?? '1.0.0',
         wcEntry: manifest.formats.webcomponent.entry as string,
         element: manifest.formats.webcomponent.element as string,
         slots:   (manifest.slots ?? []) as string[],

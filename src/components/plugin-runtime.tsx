@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 interface JSPlugin {
   id: string
   source: string
+  version: string
   wcEntry: string
   element: string
   slots: string[]
@@ -43,7 +44,9 @@ function injectPluginConfig(plugins: JSPlugin[]) {
 
 async function loadWC(plugin: JSPlugin): Promise<void> {
   if (customElements.get(plugin.element)) return
-  const url = `/api/registry/asset?path=${plugin.source}/${plugin.wcEntry}`
+  // 加版本号做缓存破坏，确保插件更新后浏览器能拉到新脚本
+  const v = encodeURIComponent(plugin.version || '1.0.0')
+  const url = `/api/registry/asset?path=${plugin.source}/${plugin.wcEntry}&v=${v}`
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script')
     script.src = url

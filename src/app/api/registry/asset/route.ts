@@ -41,8 +41,10 @@ export async function GET(req: NextRequest) {
   if (parsed) {
     const cached = await storage.read(`installed-plugins/${parsed.id}/${parsed.rel}`)
     if (cached) {
+      // WC JS 脚本不做浏览器缓存（版本更新需即时生效）；CSS 可短期缓存
+      const cc = ct === 'application/javascript' ? 'no-store' : 'public, max-age=3600'
       return new NextResponse(cached, {
-        headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=3600', 'X-Asset-Source': 'cache' }
+        headers: { 'Content-Type': ct, 'Cache-Control': cc, 'X-Asset-Source': 'cache' }
       })
     }
   }
@@ -53,7 +55,7 @@ export async function GET(req: NextRequest) {
       const { readFile } = await import('fs/promises')
       const content = await readFile(`${LOCAL_REGISTRY_URL}/${path}`, 'utf-8')
       return new NextResponse(content, {
-        headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=60', 'X-Asset-Source': 'local' }
+        headers: { 'Content-Type': ct, 'Cache-Control': 'no-store', 'X-Asset-Source': 'local' }
       })
     } catch {
       return NextResponse.json({ error: 'not found' }, { status: 404 })
