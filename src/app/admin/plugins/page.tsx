@@ -439,7 +439,10 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
           )}
           {/* 生效时间编辑（仅已安装） */}
           {p.installed && (
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div
+              style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+              onClick={e => e.stopPropagation()}
+            >
               <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>生效时间：</span>
               <select value={editing?.mode ?? p.revalidation?.mode}
                 onChange={e => onEditReval({ mode: e.target.value as RevalidationMode })}
