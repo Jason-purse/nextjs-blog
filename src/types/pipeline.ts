@@ -199,7 +199,7 @@ export interface PipelineConfig {
   transformers: TransformerPlugin[]
   emitters: EmitterPlugin[]
   hooks: HookPlugin[]
-  context: PluginContext
+  context?: PluginContext
 }
 
 // 失败策略

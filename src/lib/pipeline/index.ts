@@ -1,11 +1,12 @@
 // ============================================================
-// Pipeline Core - Main Export
+// Pipeline - Main Export
 // ============================================================
 
+// 引擎
 export { ContentPipeline, createPipeline } from './engine'
 
-// Re-export from types
-export type {
+// 类型
+export type { 
   RawContent,
   ContentNode,
   Frontmatter,
@@ -27,13 +28,17 @@ export type {
   HookEvent,
   EmitResult,
   PipelineConfig,
-  FailurePolicy,
-  AnyPlugin as Plugin
+  FailurePolicy
 } from '@/types/pipeline'
 
-// Built-in plugins (classes)
+// 插件
 export { LocalFileSource } from './plugins/source-local'
-export { MarkdownParser, TocTransformer, ReadingTimeTransformer, ExcerptTransformer } from './plugins/parser-markdown'
+export { StorageSource } from './plugins/source-storage'
+export { MarkdownParser } from './plugins/parser-markdown'
+export { TocTransformer } from './plugins/parser-markdown'
+export { ReadingTimeTransformer } from './plugins/parser-markdown'
+export { ExcerptTransformer } from './plugins/parser-markdown'
 
-// Types for plugins
+// 插件选项类型
 export type { LocalFileSourceOptions } from './plugins/source-local'
+export type { StorageSourceOptions } from './plugins/source-storage'

@@ -1,11 +1,12 @@
 // ============================================================
-// Blog Library - 使用 Pipeline 架构 (兼容版)
+// Blog Library - 完全使用 Pipeline 架构
 // ============================================================
 
-import matter from "gray-matter";
 import readingTime from "reading-time";
-import { storage } from "./storage";
-import { processPost, TransformerMetadata } from "./transformer-pipeline";
+import { createPipeline } from "./pipeline/engine";
+import { StorageSource } from "./pipeline/plugins/source-storage";
+import { MarkdownParser, ReadingTimeTransformer, TocTransformer, ExcerptTransformer } from "./pipeline/plugins/parser-markdown";
+import type { ContentNode, PluginContext } from '@/types/pipeline';
 
 export interface PostMeta {
   slug: string;
@@ -18,7 +19,6 @@ export interface PostMeta {
   author?: string;
   readingTime?: string;
   summary?: string;
-  // 扩展元数据
   wordCount?: number;
   readTimeMinutes?: number;
   toc?: Array<{ id: string; text: string; level: number }>;
@@ -32,58 +32,86 @@ export interface Post extends PostMeta {
   renderInjections?: string;
 }
 
-async function parsePost(slug: string, raw: string): Promise<Post> {
-  const realSlug = slug.replace(/\.mdx$/, "");
-  const { data, content } = matter(raw);
-  
-  const pipelineResult = await processPost(realSlug, content, data)
-  const meta = pipelineResult.metadata
+// Pipeline 单例
+let pipelineInstance: ReturnType<typeof createPipeline> | null = null;
+
+// 默认 logger
+const defaultLogger = {
+  info: () => {},
+  warn: () => {},
+  error: () => {},
+  debug: () => {}
+};
+
+function getPipeline() {
+  if (!pipelineInstance) {
+    pipelineInstance = createPipeline({
+      sources: [new StorageSource({ prefix: 'posts', extensions: ['.md', '.mdx'] })],
+      parsers: [new MarkdownParser()],
+      transformers: [
+        new ReadingTimeTransformer(),
+        new TocTransformer(),
+        new ExcerptTransformer()
+      ],
+      emitters: [],
+      hooks: []
+    }, defaultLogger);
+  }
+  return pipelineInstance;
+}
+
+// 转换 ContentNode 到 Post
+function nodeToPost(node: ContentNode): Post {
+  const content = node.body;
   const stats = readingTime(content);
   
   return {
-    slug: realSlug,
-    title: data.title,
-    date: data.date,
-    description: data.description || meta.excerpt || "",
-    tags: data.tags || [],
-    category: data.category,
-    coverImage: data.coverImage,
-    author: data.author,
-    summary: data.summary,
-    content: pipelineResult.content,
+    slug: node.slug,
+    title: (node.frontmatter.title as string) || node.slug,
+    date: (node.frontmatter.date as string) || new Date().toISOString(),
+    description: (node.frontmatter.description as string) || node.excerpt || "",
+    tags: (node.frontmatter.tags as string[]) || [],
+    category: node.frontmatter.category as string | undefined,
+    coverImage: node.frontmatter.coverImage as string | undefined,
+    author: node.frontmatter.author as string | undefined,
+    summary: node.frontmatter.summary as string | undefined,
+    content,
     readingTime: stats.text,
-    wordCount: meta.wordCount,
-    readTimeMinutes: meta.readTimeMinutes,
-    toc: meta.toc,
-    codeBlockCount: meta.codeBlocks?.length,
-    imageCount: meta.images?.length,
-    excerpt: meta.excerpt,
-    renderInjections: meta._renderInjections?.join('\n')
+    wordCount: node.frontmatter.wordCount as number | undefined,
+    readTimeMinutes: node.readingTime,
+    toc: node.toc?.map(t => ({ id: t.id, text: t.text, level: t.depth })),
+    excerpt: node.excerpt
   };
 }
 
+// ============================================================
+// 公开 API
+// ============================================================
+
 export async function getPostSlugs(): Promise<string[]> {
-  const files = await storage.list("posts");
-  return files.filter((f) => f.endsWith(".mdx"));
+  const pipeline = getPipeline();
+  const nodes = await pipeline.run();
+  return nodes.map((n: ContentNode) => n.slug);
 }
 
 export async function getPostBySlug(slug: string): Promise<Post> {
-  const realSlug = slug.replace(/\.mdx$/, "");
-  const raw = await storage.read(`posts/${realSlug}.mdx`);
-  if (!raw) throw new Error(`Post not found: ${realSlug}`);
-  return parsePost(realSlug, raw);
+  const pipeline = getPipeline();
+  const nodes = await pipeline.run();
+  const node = nodes.find((n: ContentNode) => n.slug === slug);
+  if (!node) throw new Error(`Post not found: ${slug}`);
+  return nodeToPost(node);
 }
 
 export async function getAllPosts(): Promise<PostMeta[]> {
-  const slugs = await getPostSlugs();
-  const posts = await Promise.all(
-    slugs.map(async (slug) => {
-      const post = await getPostBySlug(slug);
+  const pipeline = getPipeline();
+  const nodes = await pipeline.run();
+  return nodes
+    .map((node: ContentNode) => {
+      const post = nodeToPost(node);
       const { content: _, renderInjections: __, ...meta } = post;
       return meta;
     })
-  );
-  return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
+    .sort((a: PostMeta, b: PostMeta) => (a.date > b.date ? -1 : 1));
 }
 
 export async function getFeaturedPosts(count = 3): Promise<PostMeta[]> {
@@ -119,64 +147,3 @@ export async function getCategoryPostCount(category: string): Promise<number> {
   const posts = await getAllPosts();
   return posts.filter((p) => p.category === category).length;
 }
-
-// ============================================================
-// 新 Pipeline API (实验性)
-// 暂时注释，等 Pipeline 完善后再启用
-// ============================================================
-
-/*
-import { createPipeline, LocalFileSource, MarkdownParser, ReadingTimeTransformer, TocTransformer, ExcerptTransformer } from "./pipeline";
-
-let pipelineInstance: ReturnType<typeof createPipeline> | null = null;
-
-function getPipeline() {
-  if (!pipelineInstance) {
-    pipelineInstance = createPipeline({
-      sources: [new LocalFileSource({ dir: './content/posts', extensions: ['.md', '.mdx'] })],
-      parsers: [new MarkdownParser()],
-      transformers: [
-        new ReadingTimeTransformer(),
-        new TocTransformer(),
-        new ExcerptTransformer()
-      ],
-      emitters: [],
-      hooks: []
-    });
-  }
-  return pipelineInstance;
-}
-
-export async function getAllPostsViaPipeline() {
-  const pipeline = getPipeline();
-  const nodes = await pipeline.run();
-  return nodes.map(node => ({
-    slug: node.slug,
-    title: node.frontmatter.title,
-    date: node.frontmatter.date,
-    tags: node.frontmatter.tags || [],
-    category: node.frontmatter.category as string | undefined,
-    readingTime: node.readingTime,
-    toc: node.toc,
-    excerpt: node.excerpt
-  }));
-}
-
-export async function getPostBySlugViaPipeline(slug: string) {
-  const pipeline = getPipeline();
-  const nodes = await pipeline.run();
-  const node = nodes.find(n => n.slug === slug);
-  if (!node) return null;
-  return {
-    slug: node.slug,
-    title: node.frontmatter.title,
-    date: node.frontmatter.date,
-    content: node.body,
-    tags: node.frontmatter.tags || [],
-    category: node.frontmatter.category as string | undefined,
-    readingTime: node.readingTime,
-    toc: node.toc,
-    excerpt: node.excerpt
-  };
-}
-*/
