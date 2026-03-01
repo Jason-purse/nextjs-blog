@@ -1,9 +1,14 @@
 // ============================================================
-// UI Design System - 基于 Tailwind 的精简组件库
-// 设计原则：简洁、一致、现代感
+// UI Design System - 基于 Tailwind + shadcn/ui 设计模式
 // ============================================================
 
-import React from 'react'
+import { clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+// 工具函数 - 合并 className
+export function cn(...inputs: (string | undefined | null | false)[]) {
+  return twMerge(clsx(inputs))
+}
 
 // --- Button ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
