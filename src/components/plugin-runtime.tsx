@@ -7,14 +7,14 @@ import { useEffect } from 'react'
 
 interface JSPlugin {
   id: string
-  source: string     // plugins/{category}/{id}
-  wcEntry: string    // webcomponent/index.js 相对路径
-  element: string    // custom element 名称，如 blog-reading-progress
+  source: string
+  wcEntry: string
+  element: string
   slots: string[]
   config?: Record<string, unknown>
+  cached?: boolean
 }
 
-// 从 /api/plugins/runtime 拿到已安装的 JS 插件列表
 async function fetchJSPlugins(): Promise<JSPlugin[]> {
   try {
     const res = await fetch('/api/plugins/runtime')
@@ -25,12 +25,19 @@ async function fetchJSPlugins(): Promise<JSPlugin[]> {
   }
 }
 
-// 动态加载 WC 脚本（幂等，已注册不重复加载）
+// 在 WC 脚本执行前把 config 写入全局变量
+function injectPluginConfig(plugins: JSPlugin[]) {
+  const config: Record<string, Record<string, unknown>> = {}
+  for (const p of plugins) {
+    if (p.config) config[p.id] = p.config
+  }
+  // @ts-expect-error global inject
+  window.__BLOG_PLUGIN_CONFIG__ = config
+}
+
 async function loadWC(plugin: JSPlugin): Promise<void> {
-  if (customElements.get(plugin.element)) return  // 已注册，跳过
-
+  if (customElements.get(plugin.element)) return
   const url = `/api/registry/asset?path=${plugin.source}/${plugin.wcEntry}`
-
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script')
     script.src = url
@@ -40,23 +47,18 @@ async function loadWC(plugin: JSPlugin): Promise<void> {
   })
 }
 
-// 挂载到对应 slot
 function mountToSlot(plugin: JSPlugin): void {
   for (const slotName of plugin.slots) {
-    // "body" slot：直接挂到 document.body，WC 自己负责定位（fixed/absolute）
     if (slotName === 'body') {
       if (!document.body.querySelector(plugin.element)) {
-        const el = document.createElement(plugin.element)
-        document.body.appendChild(el)
+        document.body.appendChild(document.createElement(plugin.element))
       }
       continue
     }
-
-    const slots = document.querySelectorAll(`[data-blog-slot="${slotName}"]`)
-    slots.forEach(slot => {
-      if (slot.querySelector(plugin.element)) return
-      const el = document.createElement(plugin.element)
-      slot.appendChild(el)
+    document.querySelectorAll(`[data-blog-slot="${slotName}"]`).forEach(slot => {
+      if (!slot.querySelector(plugin.element)) {
+        slot.appendChild(document.createElement(plugin.element))
+      }
     })
   }
 }
@@ -68,6 +70,9 @@ export function PluginRuntime() {
     async function run() {
       const plugins = await fetchJSPlugins()
       if (cancelled || plugins.length === 0) return
+
+      // 必须在所有 WC 脚本执行前注入，connectedCallback 读取时已存在
+      injectPluginConfig(plugins)
 
       for (const plugin of plugins) {
         try {
@@ -83,5 +88,5 @@ export function PluginRuntime() {
     return () => { cancelled = true }
   }, [])
 
-  return null  // 纯逻辑组件，不渲染 UI
+  return null
 }

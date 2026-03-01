@@ -1,0 +1,18 @@
+{
+  "id": "theme-editorial",
+  "name": "Editorial",
+  "version": "1.0.0",
+  "description": "文艺出版风 — Playfair Display + 奶油白底色，适合长文阅读",
+  "longDescription": "受传统出版物设计启发，采用 Playfair Display 衬线字体与温暖的奶油白底色，营造优雅的阅读氛围。适合文字密集的长文章和文学类内容。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "icon": "📰",
+  "category": "theme",
+  "tags": ["serif", "warm", "editorial", "typography"],
+  "verified": true,
+  "formats": { "css": { "entry": "css/index.css" } },
+  "config": { "schema": {
+    "accentColor": { "type": "color", "label": "强调色", "default": "#8B4513", "cssVar": "--theme-accent" },
+    "fontSize": { "type": "range", "label": "正文字号", "default": 18, "min": 14, "max": 24, "unit": "px", "cssVar": "--theme-font-size" }
+  }},
+  "revalidation": { "mode": "immediate", "debounceSeconds": 0 }
+}

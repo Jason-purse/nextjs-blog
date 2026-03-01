@@ -1,0 +1,21 @@
+/* reading-progress — 使用 CSS 变量，由 plugin-loader 注入用户配置 */
+:root {
+  --rp-color: #3b82f6;
+  --rp-height: 3px;
+  --rp-z-index: 9999;
+  --rp-position-top: 0;
+  --rp-position-bottom: auto;
+}
+
+#reading-progress-bar {
+  position: fixed;
+  top: var(--rp-position-top);
+  bottom: var(--rp-position-bottom);
+  left: 0;
+  width: 0%;
+  height: var(--rp-height);
+  background: var(--rp-color);
+  z-index: var(--rp-z-index);
+  transition: width 0.1s ease;
+  border-radius: 0 2px 2px 0;
+}

@@ -8,6 +8,7 @@ import { storage } from '@/lib/storage'
 const PLUGINS_REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
 const PLUGINS_BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
 const TOKEN          = process.env.GITHUB_TOKEN
+const LOCAL_REGISTRY = process.env.PLUGIN_REGISTRY_URL
 
 const GH_HEADERS = {
   Accept: 'application/vnd.github.v3+json',
@@ -15,20 +16,25 @@ const GH_HEADERS = {
 }
 
 async function fetchFromRepo(path: string) {
-  const res = await fetch(
-    `https://api.github.com/repos/${PLUGINS_REPO}/contents/${path}?ref=${PLUGINS_BRANCH}`,
-    { headers: GH_HEADERS, next: { revalidate: 300 } }
-  )
-  if (!res.ok) return null
-  const data = await res.json()
-  return JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8'))
+  try {
+    if (LOCAL_REGISTRY) {
+      const { readFile } = await import('fs/promises')
+      const raw = await readFile(`${LOCAL_REGISTRY}/${path}`, 'utf-8')
+      return JSON.parse(raw)
+    }
+    const res = await fetch(
+      `https://api.github.com/repos/${PLUGINS_REPO}/contents/${path}?ref=${PLUGINS_BRANCH}`,
+      { headers: GH_HEADERS, next: { revalidate: 300 } }
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    return JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8'))
+  } catch { return null }
 }
 
 async function readManifest(id: string, source: string) {
-  // 优先缓存
   const cached = await storage.read(`installed-plugins/${id}/plugin.json`)
   if (cached) return JSON.parse(cached)
-  // fallback
   return fetchFromRepo(`${source}/plugin.json`)
 }
 
@@ -54,7 +60,6 @@ export async function GET() {
   const installedIds = Object.keys(installedMap)
   if (installedIds.length === 0) return NextResponse.json([])
 
-  // 获取 source 映射
   const regRaw = await fetchFromRepo('registry.json')
   if (!regRaw) return NextResponse.json([])
   const sourceMap = Object.fromEntries(
@@ -68,7 +73,6 @@ export async function GET() {
       const manifest = await readManifest(id, source)
       if (!manifest?.formats?.webcomponent) return null
 
-      // 合并 schema defaults + 用户 config
       const schema = manifest.config?.schema ?? {}
       const defaults = Object.fromEntries(
         Object.entries(schema).map(([k, f]) => [k, (f as { default: unknown }).default])
@@ -77,7 +81,7 @@ export async function GET() {
 
       return {
         id,
-        source,                                          // 用于客户端拼 asset URL
+        source,
         wcEntry: manifest.formats.webcomponent.entry as string,
         element: manifest.formats.webcomponent.element as string,
         slots:   (manifest.slots ?? []) as string[],

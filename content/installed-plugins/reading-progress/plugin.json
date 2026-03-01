@@ -1,0 +1,62 @@
+{
+  "id": "reading-progress",
+  "name": "阅读进度条",
+  "version": "1.1.0",
+  "icon": "📊",
+  "description": "实时显示文章阅读进度的进度条，固定在页面顶部。支持自定义颜色、高度和位置。",
+  "longDescription": "实时显示文章阅读进度的进度条，固定在页面顶部。支持自定义颜色、高度和位置。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "ui",
+  "tags": ["progress", "scroll", "ux"],
+  "verified": true,
+  "type": "plugin",
+
+  "formats": {
+    "css": { "entry": "css/index.css" },
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-reading-progress"
+    }
+  },
+
+  "slots": ["before-content"],
+
+  "config": {
+    "schema": {
+      "color": {
+        "type": "color",
+        "default": "#3b82f6",
+        "label": "进度条颜色",
+        "cssVar": "--rp-color"
+      },
+      "height": {
+        "type": "range",
+        "default": 3,
+        "min": 1,
+        "max": 10,
+        "unit": "px",
+        "label": "高度",
+        "cssVar": "--rp-height"
+      },
+      "position": {
+        "type": "select",
+        "default": "top",
+        "options": [
+          { "value": "top",    "label": "顶部" },
+          { "value": "bottom", "label": "底部" }
+        ],
+        "label": "位置",
+        "cssVar": "--rp-position"
+      },
+      "zIndex": {
+        "type": "number",
+        "default": 9999,
+        "min": 1,
+        "max": 99999,
+        "label": "层级 z-index",
+        "cssVar": "--rp-z-index"
+      }
+    }
+  },
+  "revalidation": { "mode": "debounced", "debounceSeconds": 120 }
+}

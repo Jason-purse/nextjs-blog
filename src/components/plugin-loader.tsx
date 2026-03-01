@@ -8,15 +8,21 @@ import type { ConfigSchema } from '@/types/plugin'
 const PLUGINS_REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
 const PLUGINS_BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
 const TOKEN          = process.env.GITHUB_TOKEN
+// 本地开发模式：文件系统路径，上线时删除此 env
+const LOCAL_REGISTRY = process.env.PLUGIN_REGISTRY_URL
 
 const GH_HEADERS = {
   Accept: 'application/vnd.github.v3+json',
   ...(TOKEN && { Authorization: `Bearer ${TOKEN}` }),
 }
 
-// Fallback：从 blog-plugins 拉文件
+// Fallback：本地文件系统 or blog-plugins GitHub
 async function fetchFromPluginsRepo(path: string): Promise<string | null> {
   try {
+    if (LOCAL_REGISTRY) {
+      const { readFile } = await import('fs/promises')
+      return await readFile(`${LOCAL_REGISTRY}/${path}`, 'utf-8')
+    }
     const res = await fetch(
       `https://api.github.com/repos/${PLUGINS_REPO}/contents/${path}?ref=${PLUGINS_BRANCH}`,
       { headers: GH_HEADERS, next: { revalidate: 300 } }
@@ -29,10 +35,8 @@ async function fetchFromPluginsRepo(path: string): Promise<string | null> {
 
 // 读 plugin.json：优先缓存，fallback 源仓库
 async function readManifest(id: string, source: string): Promise<Record<string, unknown> | null> {
-  // 先读 blog-content 缓存
   const cached = await storage.read(`installed-plugins/${id}/plugin.json`)
   if (cached) return JSON.parse(cached)
-  // fallback
   const raw = await fetchFromPluginsRepo(`${source}/plugin.json`)
   return raw ? JSON.parse(raw) : null
 }
@@ -44,7 +48,7 @@ async function readCSS(id: string, source: string, cssEntry: string): Promise<st
   return fetchFromPluginsRepo(`${source}/${cssEntry}`)
 }
 
-// 从 registry.json 获取 source 路径（缓存 5 分钟）
+// 从 registry.json 获取 source 路径
 let regCache: { plugins: { id: string; source: string }[] } | null = null
 async function getRegistry() {
   if (regCache) return regCache
@@ -54,7 +58,6 @@ async function getRegistry() {
   return regCache
 }
 
-// 将用户 config 合并 schema defaults，生成 CSS 变量字符串
 function buildCssVars(schema: ConfigSchema, userConfig: Record<string, unknown>): string {
   return Object.entries(schema)
     .filter(([, field]) => field.cssVar)
@@ -67,7 +70,6 @@ function buildCssVars(schema: ConfigSchema, userConfig: Record<string, unknown>)
 }
 
 export async function PluginLoader() {
-  // 读 settings.json：取已启用插件 id + 用户 config
   let installedMap: Record<string, Record<string, unknown>> = {}
   try {
     const raw = await storage.read('settings.json')
@@ -89,28 +91,21 @@ export async function PluginLoader() {
   const installedIds = Object.keys(installedMap)
   if (installedIds.length === 0) return null
 
-  // 获取 source 路径映射（用于 fallback）
   const reg = await getRegistry()
   const sourceMap = Object.fromEntries((reg?.plugins ?? []).map(p => [p.id, p.source]))
 
   const results = await Promise.all(
     installedIds.map(async (id) => {
-      const source = sourceMap[id] ?? `plugins/content/${id}` // safe fallback
-
+      const source = sourceMap[id] ?? `plugins/content/${id}`
       const manifest = await readManifest(id, source)
       if (!manifest) return null
 
       const cssEntry: string | undefined = (manifest?.formats as Record<string, { entry?: string }>)?.css?.entry
       const schema: ConfigSchema = (manifest?.config as { schema?: ConfigSchema })?.schema ?? {}
       const userConfig = installedMap[id]
-
-      // CSS 变量（用户配置合并 schema 默认值）
       const cssVars = buildCssVars(schema, userConfig)
-
-      // CSS 内容
       let css: string | null = null
       if (cssEntry) css = await readCSS(id, source, cssEntry)
-
       return { id, cssVars, css }
     })
   )

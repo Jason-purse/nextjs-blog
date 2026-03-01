@@ -28,7 +28,48 @@
         },
         "config": {},
         "assetsCached": true
+      },
+      "theme-editorial": {
+        "id": "theme-editorial",
+        "name": "Editorial",
+        "version": "1.0.0",
+        "description": "文艺出版风 — Playfair Display + 奶油白底色，适合长文阅读",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "theme",
+        "enabled": true,
+        "installedAt": 1772352436376,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "reading-progress": {
+        "id": "reading-progress",
+        "name": "阅读进度条",
+        "version": "1.1.0",
+        "description": "实时显示文章阅读进度的进度条，固定在页面顶部",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772352436418,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 120
+        },
+        "config": {},
+        "assetsCached": true
       }
-    }
+    },
+    "activeTheme": "theme-editorial"
   }
 }

@@ -3,7 +3,6 @@ import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/goog
 import { ThemeProvider } from "@/components/theme-provider";
 import { PluginLoader } from "@/components/plugin-loader";
 import { PluginRuntime } from "@/components/plugin-runtime";
-import { storage } from "@/lib/storage";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -50,50 +49,22 @@ export const metadata: Metadata = {
   },
 };
 
-// 获取已启用插件的配置，注入到 window.__BLOG_PLUGIN_CONFIG__
-async function getPluginConfigs(): Promise<Record<string, Record<string, unknown>>> {
-  try {
-    const raw = await storage.read('settings.json')
-    if (!raw) return {}
-    const settings = JSON.parse(raw)
-    const registry = settings?.plugins?.registry
-    if (!registry) return {}
-    
-    const configs: Record<string, Record<string, unknown>> = {}
-    for (const [pluginId, pluginData] of Object.entries(registry as Record<string, { enabled: boolean; config?: Record<string, unknown> }>)) {
-      if (pluginData.enabled && pluginData.config) {
-        configs[pluginId] = pluginData.config
-      }
-    }
-    return configs
-  } catch {
-    return {}
-  }
-}
-
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pluginConfigs = await getPluginConfigs()
-  // 防 XSS：转义 </script> 防止提前关闭 script 标签
-  const configJson = JSON.stringify(pluginConfigs).replace(/<\/script>/gi, '<\\/script>')
-
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* 插件配置优先注入：WC connectedCallback 读��时已存在 */}
-        <script dangerouslySetInnerHTML={{ __html: `window.__BLOG_PLUGIN_CONFIG__ = ${configJson}` }} />
         <PluginLoader />
       </head>
       <body
         className={`${playfair.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <ThemeProvider>
-          {/* JS 插件客户端 Runtime */}
+          {/* JS 插件客户端 Runtime（含 __BLOG_PLUGIN_CONFIG__ 注入） */}
           <PluginRuntime />
-          {/* Slot 容器：JS 插件挂载到这里 */}
           <div data-blog-slot="before-content" />
           {children}
           <div data-blog-slot="after-content" />
