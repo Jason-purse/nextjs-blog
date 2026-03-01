@@ -27,7 +27,11 @@ export async function githubRead(
   }
 
   const url = `${BASE_URL}/${path}?ref=${GITHUB_CONTENT_BRANCH}`;
-  const response = await fetch(url, { headers });
+  // next: { revalidate } 让 Next.js 缓存响应，相同 URL 在 TTL 内只调用一次 GitHub API
+  // 插件资源（plugin.json / CSS / JS）用长缓存；settings.json 等配置用短缓存
+  const isPluginAsset = path.startsWith('installed-plugins/')
+  const revalidate = isPluginAsset ? 86400 : 30  // 插件资源 24h，配置文件 30s
+  const response = await fetch(url, { headers, next: { revalidate } });
 
   if (response.status === 404) {
     return null;
