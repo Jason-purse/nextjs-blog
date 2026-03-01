@@ -1,0 +1,27 @@
+{
+  "id": "search",
+  "name": "搜索",
+  "version": "1.0.0",
+  "icon": "🔍",
+  "description": "全站搜索",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "seo",
+  "tags": ["search", "seo"],
+  "verified": false,
+  "source": "plugins/seo/search",
+  "formats": {
+    "page": {
+      "route": "/search",
+      "title": "搜索",
+      "nav": { "location": "header", "label": "🔍", "order": 20 }
+    },
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-search"
+    }
+  },
+  "slots": [],
+  "allowedRoutes": ["/search"],
+  "dependencies": { "required": [], "recommended": [] },
+  "themeCompatibility": { "universal": true }
+}
