@@ -29,7 +29,7 @@ export default function StoragePage() {
   const [path, setPath]     = useState('posts')
 
   useEffect(() => {
-    fetch('/api/admin/storage')
+    fetch('/api/admin/storage?path=' + path)
       .then(r => { if (r.status === 401) { router.push('/admin/login'); return null } return r.json() })
       .then(data => {
         if (data) {

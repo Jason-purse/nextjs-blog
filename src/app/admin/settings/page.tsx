@@ -65,7 +65,7 @@ export default function SettingsPage() {
     setSaving(false);
     if (data.success) {
       setMessage("Settings saved successfully!");
-      setMessage(""), setTimeout(() => 3000);
+      setTimeout(() => setMessage(""), 3000);
     } else {
       setMessage("Failed to save settings");
     }
