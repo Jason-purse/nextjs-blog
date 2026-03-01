@@ -3,42 +3,46 @@
 
 import { storage } from '@/lib/storage'
 
-interface PluginSettings {
-  installed: string[]
-  config: Record<string, Record<string, unknown>>
-}
-
 // 默认启用的核心插件（settings.json 里没配置时的兜底）
 const DEFAULT_ENABLED = ['ai-summary', 'giscus-comments', 'reading-progress']
-let cache: { data: PluginSettings; ts: number } | null = null
-const TTL = 30_000  // 30s 本地缓存，减少 GitHub API 调用
 
-async function getPluginSettings(): Promise<PluginSettings> {
+let cache: { enabled: Set<string>; ts: number } | null = null
+const TTL = 30_000
+
+async function getEnabledSet(): Promise<Set<string>> {
   const now = Date.now()
-  if (cache && now - cache.ts < TTL) return cache.data
+  if (cache && now - cache.ts < TTL) return cache.enabled
 
   try {
     const raw = await storage.read('settings.json')
     const settings = raw ? JSON.parse(raw) : {}
-    const data: PluginSettings = {
-      installed: settings?.plugins?.installed ?? DEFAULT_ENABLED,
-      config:    settings?.plugins?.config    ?? {},
+    const plugins = settings?.plugins ?? {}
+
+    let enabled: string[]
+
+    // 新格式：plugins.registry
+    if (plugins.registry && typeof plugins.registry === 'object') {
+      enabled = Object.values(plugins.registry as Record<string, { enabled: boolean }>)
+        .filter(p => p.enabled)
+        .map(p => (p as unknown as { id: string }).id)
     }
-    cache = { data, ts: now }
-    return data
+    // 旧格式：plugins.installed[]
+    else if (Array.isArray(plugins.installed)) {
+      enabled = plugins.installed as string[]
+    }
+    else {
+      enabled = DEFAULT_ENABLED
+    }
+
+    const set = new Set(enabled)
+    cache = { enabled: set, ts: now }
+    return set
   } catch {
-    return { installed: [], config: {} }
+    return new Set(DEFAULT_ENABLED)
   }
 }
 
-/** 判断某个插件是否已安装（启用） */
 export async function isPluginEnabled(pluginId: string): Promise<boolean> {
-  const { installed } = await getPluginSettings()
-  return installed.includes(pluginId)
-}
-
-/** 获取某个插件的配置 */
-export async function getPluginConfig(pluginId: string): Promise<Record<string, unknown>> {
-  const { config } = await getPluginSettings()
-  return config[pluginId] ?? {}
+  const set = await getEnabledSet()
+  return set.has(pluginId)
 }
