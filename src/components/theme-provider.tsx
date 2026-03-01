@@ -1,52 +1,65 @@
+"use client"
 // src/components/theme-provider.tsx
-"use client";
+// ThemePlugin 的 React 适配层
+// 职责：从 plugin ctx 读主题列表，管理 localStorage + data-theme 属性
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { ThemeMode, defaultTheme } from '@/lib/themes';
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { THEMES, DEFAULT_THEME } from '../../blog.config'
+import type { ThemePreset } from '@/plugins/theme'
 
-type ThemeContextType = {
-  theme: ThemeMode;
-  setTheme: (theme: ThemeMode) => void;
-};
+const STORAGE_KEY = 'blog-theme'
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+interface ThemeContextType {
+  theme: string
+  setTheme: (id: string) => void
+  themes: ThemePreset[]
+  current: ThemePreset | undefined
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(defaultTheme);
-  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<string>(DEFAULT_THEME)
+  const [mounted, setMounted] = useState(false)
 
-  // Initialize theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('blog-theme') as ThemeMode;
-    if (savedTheme && ['editorial', 'minimal', 'tech', 'warm'].includes(savedTheme)) {
-      setThemeState(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    } else {
-      // Default to editorial if nothing saved
-      document.documentElement.setAttribute('data-theme', defaultTheme);
-    }
-    setMounted(true);
-  }, []);
+    const saved = localStorage.getItem(STORAGE_KEY)
+    const valid = THEMES.find(t => t.id === saved)
+    const active = valid ? saved! : DEFAULT_THEME
+    setThemeState(active)
+    document.documentElement.setAttribute('data-theme', active)
+    setMounted(true)
+  }, [])
 
-  const setTheme = (newTheme: ThemeMode) => {
-    setThemeState(newTheme);
-    localStorage.setItem('blog-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
+  const setTheme = (id: string) => {
+    const valid = THEMES.find(t => t.id === id)
+    if (!valid) return
+    setThemeState(id)
+    localStorage.setItem(STORAGE_KEY, id)
+    document.documentElement.setAttribute('data-theme', id)
+  }
 
-  // Prevent hydration mismatch by rendering children only after mount
-  // Or simpler: keep the context available but check mounted state in UI
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+  if (!mounted) {
+    // 防止 hydration mismatch，渲染空壳
+    return <ThemeContext.Provider value={{ theme, setTheme, themes: THEMES, current: undefined }}>
       {children}
     </ThemeContext.Provider>
-  );
+  }
+
+  return (
+    <ThemeContext.Provider value={{
+      theme,
+      setTheme,
+      themes: THEMES,
+      current: THEMES.find(t => t.id === theme),
+    }}>
+      {children}
+    </ThemeContext.Provider>
+  )
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
+  const ctx = useContext(ThemeContext)
+  if (!ctx) throw new Error('useTheme must be used within ThemeProvider')
+  return ctx
 }

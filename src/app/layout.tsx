@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PluginLoader } from "@/components/plugin-loader";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -54,9 +55,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <PluginLoader />
+      </head>
       <body
         className={`${playfair.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        {/* Slot: 进度条插件挂载点 */}
+        <div className="blog-reading-progress" aria-hidden="true" />
         <ThemeProvider>
           {children}
         </ThemeProvider>
