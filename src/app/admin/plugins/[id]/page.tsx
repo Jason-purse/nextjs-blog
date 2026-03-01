@@ -11,7 +11,7 @@ interface PluginRegistryInfo {
   id: string
   name: string
   icon?: string
-  author?: { name: string; url?: string }
+  author?: string | { name: string; url?: string }
   description: string
   longDescription?: string
   tags: string[]

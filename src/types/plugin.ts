@@ -53,13 +53,12 @@ export interface RegistryPlugin {
   tags: string[]
   verified: boolean
   version: string
-  author: string
-  downloads: number
+  author: string | { name: string; url?: string }  // 字符串或对象均可
+  downloads?: number            // 可选，registry 可能不提供
   source: string
   description: string
-  longDescription?: string      // 详细描述（markdown）
+  longDescription?: string      // 详细描述
   icon?: string                 // emoji 或 SVG 字符串
-  authorInfo?: { name: string; url?: string }  // 作者信息
   comingSoon?: boolean          // 即将推出标记
   preview?: string              // 主题专用预览图
   revalidation: PluginRevalidation

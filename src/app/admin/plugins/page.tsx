@@ -332,9 +332,9 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
   onEditReval(patch: Partial<PluginRevalidation>): void; onSaveReval(): void
 }) {
   const router = useRouter()
-  // icon / authorInfo / comingSoon 已在 PluginView extends RegistryPlugin 中定义
+  // icon / comingSoon 已在 PluginView extends RegistryPlugin 中定义
   const icon = p.icon || CATEGORY_META[p.category]?.icon || '🔌'
-  const authorName = p.authorInfo?.name || p.author
+  const authorName = typeof p.author === 'string' ? p.author : (p.author?.name ?? '未知作者')
   const comingSoon = p.comingSoon ?? false
 
   // 点击卡片（非按钮区域）跳转到详情页
@@ -387,7 +387,7 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
             <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>v{p.version}</span>
             {p.verified && <span style={{ fontSize: 11, background: '#dcfce7', color: '#166534', padding: '1px 6px', borderRadius: 8 }}>✓ 官方</span>}
             {!p.verified && <span style={{ fontSize: 11, background: '#fff7ed', color: '#9a3412', padding: '1px 6px', borderRadius: 8 }}>社区</span>}
-            <span style={{ fontSize: 11, color: '#6b7280' }}>by {authorName} · ↓{p.downloads}</span>
+            <span style={{ fontSize: 11, color: '#6b7280' }}>by {authorName}{p.downloads != null ? ` · ↓${p.downloads}` : ''}</span>
             {/* 生效时间 */}
             {p.installed && (
               <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: p.revalidation.mode === 'immediate' ? '#eff6ff' : '#fffbeb', color: p.revalidation.mode === 'immediate' ? '#1d4ed8' : '#92400e' }}>
