@@ -74,7 +74,16 @@ export default async function Home() {
                 >
                   <Link href={`/blog/${post.slug}`}>
                     <div className="overflow-hidden rounded-lg border border-border bg-card">
-                      <div className="aspect-video bg-secondary" />
+                      <div className="aspect-video bg-secondary relative overflow-hidden">
+                        {post.coverImage && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={post.coverImage}
+                            alt={post.title}
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
                       <div className="p-5">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <time dateTime={post.date}>

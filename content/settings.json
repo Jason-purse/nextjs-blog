@@ -169,26 +169,6 @@
         "config": {},
         "assetsCached": true
       },
-      "toc": {
-        "id": "toc",
-        "name": "目录导航",
-        "version": "1.0.0",
-        "description": "自动生成文章目录，固定在侧边",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "content",
-        "enabled": true,
-        "installedAt": 1772363393611,
-        "revalidation": {
-          "mode": "immediate",
-          "debounceSeconds": 0
-        },
-        "config": {},
-        "assetsCached": true
-      },
       "code-highlight": {
         "id": "code-highlight",
         "name": "代码高亮",
