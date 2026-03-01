@@ -17,12 +17,13 @@ interface Plugin {
   name: string;
   description: string;
   enabled: boolean;
-  installedAt: string;
+  installed: boolean;
+  installedAt?: number;
 }
 
 interface PluginsData {
-  installed: Plugin[];
-  available: Plugin[];
+  plugins: Plugin[];
+  activeTheme: string;
 }
 
 export default function AdminDashboard() {
@@ -86,11 +87,12 @@ export default function AdminDashboard() {
     }
   }
 
-  const installedPluginsCount = pluginsData?.installed.length || 0;
-  const enabledPluginsCount = pluginsData?.installed.filter(p => p.enabled).length || 0;
+  const installedPluginsCount = pluginsData?.plugins.filter(p => p.installed).length || 0;
+  const enabledPluginsCount = pluginsData?.plugins.filter(p => p.enabled).length || 0;
 
-  const recentlyInstalledPlugins = pluginsData?.installed
-    .sort((a, b) => new Date(b.installedAt).getTime() - new Date(a.installedAt).getTime())
+  const recentlyInstalledPlugins = pluginsData?.plugins
+    .filter(p => p.installed && p.installedAt)
+    .sort((a, b) => (b.installedAt ?? 0) - (a.installedAt ?? 0))
     .slice(0, 3) || [];
 
   if (loading) return <div style={{ padding: 40, color: "var(--foreground)", background: "var(--background)", minHeight: "100vh" }}>Loading...</div>;
