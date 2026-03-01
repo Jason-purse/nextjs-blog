@@ -84,8 +84,8 @@
         await new Promise((resolve, reject) => {
           script.onload = resolve;
           script.onerror = reject;
+          document.head.appendChild(script);  // 必须先 append 再等 onload
         });
-        document.head.appendChild(script);
       };
 
       loadHLJS().then(() => {
@@ -94,8 +94,19 @@
           return;
         }
         
-        // 高亮所有代码块
-        window.hljs.highlightAll();
+        // 高亮函数：只处理还没高亮过的 code 块
+        const highlightNew = () => {
+          document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
+            window.hljs.highlightElement(block);
+          });
+        };
+
+        // 立即高亮当前 DOM 里的代码块
+        highlightNew();
+
+        // MutationObserver：监听 React hydration 后动态注入的代码块
+        const observer = new MutationObserver(highlightNew);
+        observer.observe(document.body, { childList: true, subtree: true });
 
         // 添加行号
         if (showLineNumbers) {

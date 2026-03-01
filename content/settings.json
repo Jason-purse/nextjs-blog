@@ -208,7 +208,7 @@
         ],
         "source": "plugins/content/code-highlight",
         "revalidation": {
-          "mode": "debounced",
+          "mode": "immediate",
           "debounceSeconds": 60
         },
         "config": {},
