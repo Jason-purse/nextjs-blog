@@ -62,8 +62,6 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {/* Slot: 进度条插件挂载点 */}
-        <div className="blog-reading-progress" aria-hidden="true" />
         <ThemeProvider>
           {/* JS 插件客户端 Runtime */}
           <PluginRuntime />

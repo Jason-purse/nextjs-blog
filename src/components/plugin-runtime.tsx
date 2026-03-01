@@ -7,7 +7,8 @@ import { useEffect } from 'react'
 
 interface JSPlugin {
   id: string
-  wcEntry: string    // webcomponent/index.js 的 raw URL
+  source: string     // plugins/{category}/{id}
+  wcEntry: string    // webcomponent/index.js 相对路径
   element: string    // custom element 名称，如 blog-reading-progress
   slots: string[]
   config?: Record<string, unknown>
@@ -30,7 +31,7 @@ async function loadWC(plugin: JSPlugin): Promise<void> {
 
   // 服务端已校验 checksum；客户端通过 /api/registry/asset 代理加载
   // 不直接 import raw.githubusercontent.com，走代理保证 token 安全
-  const url = `/api/registry/asset?path=plugins/${plugin.id}/${plugin.wcEntry}`
+  const url = `/api/registry/asset?path=${plugin.source}/${plugin.wcEntry}`
 
   const script = document.createElement('script')
   script.type = 'module'
