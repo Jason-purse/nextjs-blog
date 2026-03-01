@@ -90,7 +90,11 @@ export async function GET() {
         cached:  !!(await storage.read(`installed-plugins/${id}/plugin.json`)),
         allowedRoutes: (manifest.allowedRoutes as string[] | undefined) ?? ['*'],
         dependencies: manifest.dependencies as { required: string[]; recommended: string[] } | undefined,
-        formats: manifest.formats,  // 返回完整 formats，包含 adminPage/page 等
+        formats: manifest.formats,
+        // 优先级 & 互斥组 & 主题偏好（来自 plugin.json）
+        priority:       (manifest.priority as number | undefined) ?? 0,
+        exclusiveGroup: manifest.exclusiveGroup as string | undefined,
+        themeConfig:    manifest.themeConfig as Record<string, Record<string, unknown>> | undefined,
       }
     })
   )

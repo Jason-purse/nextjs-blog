@@ -5,9 +5,16 @@
   "icon": "🎨",
   "description": "使用 Highlight.js 为代码块添加语法高亮",
   "longDescription": "使用 Highlight.js 为代码块添加语法高亮，支持多种配色方案，让代码更具可读性。资源在安装时本地缓存，不依赖外部 CDN。",
-  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "author": {
+    "name": "Blog Plugins Team",
+    "url": "https://github.com/Jason-purse/blog-plugins"
+  },
   "category": "content",
-  "tags": ["code", "highlight", "syntax"],
+  "tags": [
+    "code",
+    "highlight",
+    "syntax"
+  ],
   "verified": true,
   "formats": {
     "webcomponent": {
@@ -15,8 +22,12 @@
       "element": "blog-code-highlight"
     }
   },
-  "slots": ["body"],
-  "allowedRoutes": ["/blog/*"],
+  "slots": [
+    "body"
+  ],
+  "allowedRoutes": [
+    "/blog/*"
+  ],
   "dependencies": {
     "required": [],
     "recommended": []
@@ -45,8 +56,35 @@
   ],
   "config": {
     "schema": {
-      "theme": { "type": "select", "label": "配色方案", "default": "github", "options": [{"value":"github","label":"GitHub"},{"value":"atom-one-dark","label":"Atom Dark"},{"value":"monokai","label":"Monokai"},{"value":"vs2015","label":"VS Code Dark"}] }
+      "theme": {
+        "type": "select",
+        "label": "配色方案",
+        "default": "github",
+        "options": [
+          {
+            "value": "github",
+            "label": "GitHub"
+          },
+          {
+            "value": "atom-one-dark",
+            "label": "Atom Dark"
+          },
+          {
+            "value": "monokai",
+            "label": "Monokai"
+          },
+          {
+            "value": "vs2015",
+            "label": "VS Code Dark"
+          }
+        ]
+      }
     }
   },
-  "revalidation": { "mode": "debounced", "debounceSeconds": 60 }
+  "revalidation": {
+    "mode": "debounced",
+    "debounceSeconds": 60
+  },
+  "priority": 0,
+  "exclusiveGroup": "code-highlight"
 }

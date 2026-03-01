@@ -12,6 +12,53 @@ interface JSPlugin {
   slots: string[]
   allowedRoutes?: string[]
   config?: Record<string, unknown>
+  priority?: number        // 0=系统, 5=主题捆绑, 10=用户自定义
+  exclusiveGroup?: string  // 同组只有最高优先级的生效
+  themeConfig?: Record<string, Record<string, unknown>> // 主题偏好 config
+}
+
+// 主题 → 插件 config 偏好映射（内置主题默认值）
+// 用户安装的同 exclusiveGroup 更高优先级插件会自动覆盖，无需修改此处
+const THEME_PLUGIN_DEFAULTS: Record<string, Record<string, Record<string, unknown>>> = {
+  editorial: { 'code-highlight': { theme: 'github' } },
+  minimal:   { 'code-highlight': { theme: 'github' } },
+  tech:      { 'code-highlight': { theme: 'atom-one-dark' } },
+  warm:      { 'code-highlight': { theme: 'vs2015' } },
+}
+
+/**
+ * 冲突解决：同一 exclusiveGroup 内只保留最高 priority 的插件
+ * priority 相同时后安装的（数组靠后）胜出
+ */
+function resolveExclusiveGroups(plugins: JSPlugin[]): JSPlugin[] {
+  const groups = new Map<string, JSPlugin>()
+  const ungrouped: JSPlugin[] = []
+
+  for (const plugin of plugins) {
+    if (!plugin.exclusiveGroup) {
+      ungrouped.push(plugin)
+      continue
+    }
+    const existing = groups.get(plugin.exclusiveGroup)
+    if (!existing || (plugin.priority ?? 0) >= (existing.priority ?? 0)) {
+      groups.set(plugin.exclusiveGroup, plugin)
+    }
+  }
+  return [...ungrouped, ...groups.values()]
+}
+
+/**
+ * 注入主题偏好 config：
+ * 优先级：plugin.themeConfig[themeId] > THEME_PLUGIN_DEFAULTS[themeId] > plugin.config
+ */
+function resolvePluginConfig(
+  plugin: JSPlugin,
+  themeId: string
+): Record<string, unknown> {
+  const base = plugin.config ?? {}
+  const defaults = THEME_PLUGIN_DEFAULTS[themeId]?.[plugin.id] ?? {}
+  const override = plugin.themeConfig?.[themeId] ?? {}
+  return { ...base, ...defaults, ...override }
 }
 
 function detectRouteType(pathname: string): BlogPluginContext['platform']['route']['type'] {
@@ -151,7 +198,18 @@ export function PluginRuntime() {
     initializedRef.current = true
 
     async function init() {
-      const plugins = await fetchJSPlugins()
+      const rawPlugins = await fetchJSPlugins()
+
+      // 1. 冲突解决：同 exclusiveGroup 只保留最高优先级
+      const resolved = resolveExclusiveGroups(rawPlugins)
+
+      // 2. 主题感知 config 注入
+      const themeId = getActiveThemeId()
+      const plugins = resolved.map(p => ({
+        ...p,
+        config: resolvePluginConfig(p, themeId),
+      }))
+
       pluginsRef.current = plugins
       injectPluginConfig(plugins)
       initBlogCtx(pathname)

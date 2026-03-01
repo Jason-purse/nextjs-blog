@@ -35,6 +35,16 @@ export interface Plugin {
     schema: Record<string, ConfigField>
   }
   
+  // 优先级与互斥组
+  // priority: 0=系统内置, 5=主题捆绑, 10=用户自定义
+  // 同一 exclusiveGroup 内只有最高优先级的插件生效
+  priority?: number
+  exclusiveGroup?: string
+
+  // 主题偏好配置：不同主题激活时注入不同 config
+  // key = themeId, value = 覆盖的 config 字段
+  themeConfig?: Record<string, Record<string, unknown>>
+
   // 主题兼容性
   themeCompatibility?: {
     optimizedFor?: string[]
