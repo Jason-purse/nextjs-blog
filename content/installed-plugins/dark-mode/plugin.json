@@ -16,6 +16,11 @@
     }
   },
   "slots": ["body"],
+  "allowedRoutes": ["*"],
+  "dependencies": {
+    "required": [],
+    "recommended": []
+  },
   "config": {
     "schema": {
       "followSystem": { "type": "toggle", "label": "跟随系统设置", "default": true },

@@ -9,39 +9,19 @@
   "translationEnabled": false,
   "plugins": {
     "registry": {
-      "back-to-top": {
-        "id": "back-to-top",
-        "name": "回到顶部",
+      "share-buttons": {
+        "id": "share-buttons",
+        "name": "社交分享",
         "version": "1.0.0",
-        "description": "平滑滚动回顶部的浮动按钮",
+        "description": "文章底部添加分享按钮，支持复制链接、Twitter/X、微信等",
         "author": {
           "name": "Blog Plugins Team",
           "url": "https://github.com/Jason-purse/blog-plugins"
         },
         "verified": true,
-        "category": "ui",
+        "category": "social",
         "enabled": true,
-        "installedAt": 1772351590855,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 60
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "theme-editorial": {
-        "id": "theme-editorial",
-        "name": "Editorial",
-        "version": "1.0.0",
-        "description": "文艺出版风 — Playfair Display + 奶油白底色，适合长文阅读",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "theme",
-        "enabled": true,
-        "installedAt": 1772352436376,
+        "installedAt": 1772354579532,
         "revalidation": {
           "mode": "immediate",
           "debounceSeconds": 0
@@ -49,62 +29,22 @@
         "config": {},
         "assetsCached": true
       },
-      "reading-progress": {
-        "id": "reading-progress",
-        "name": "阅读进度条",
-        "version": "1.1.0",
-        "description": "实时显示文章阅读进度的进度条，固定在页面顶部",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "ui",
-        "enabled": true,
-        "installedAt": 1772352436418,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 120
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "toc": {
-        "id": "toc",
-        "name": "目录导航",
+      "like-button": {
+        "id": "like-button",
+        "name": "点赞按钮",
         "version": "1.0.0",
-        "description": "自动生成文章目录，固定在侧边",
+        "description": "文章底部添加点赞按钮，支持 localStorage 存储",
         "author": {
           "name": "Blog Plugins Team",
           "url": "https://github.com/Jason-purse/blog-plugins"
         },
         "verified": true,
-        "category": "content",
+        "category": "social",
         "enabled": true,
-        "installedAt": 1772353707614,
+        "installedAt": 1772354579577,
         "revalidation": {
           "mode": "immediate",
           "debounceSeconds": 0
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "code-highlight": {
-        "id": "code-highlight",
-        "name": "代码高亮",
-        "version": "1.0.0",
-        "description": "使用 Highlight.js 为代码块添加语法高亮",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "content",
-        "enabled": true,
-        "installedAt": 1772353317206,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 60
         },
         "config": {},
         "assetsCached": true
@@ -121,7 +61,7 @@
         "verified": true,
         "category": "content",
         "enabled": true,
-        "installedAt": 1772353618385,
+        "installedAt": 1772354579274,
         "revalidation": {
           "mode": "immediate",
           "debounceSeconds": 0
@@ -141,10 +81,130 @@
         "verified": true,
         "category": "ui",
         "enabled": true,
-        "installedAt": 1772353729936,
+        "installedAt": 1772354579339,
         "revalidation": {
           "mode": "debounced",
           "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "back-to-top": {
+        "id": "back-to-top",
+        "name": "回到顶部",
+        "version": "1.0.0",
+        "description": "平滑滚动回顶部的浮动按钮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772354579415,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "reading-progress": {
+        "id": "reading-progress",
+        "name": "阅读进度条",
+        "version": "1.1.0",
+        "description": "实时显示文章阅读进度的进度条，固定在页面顶部",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772354579490,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 120
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "view-count": {
+        "id": "view-count",
+        "name": "阅读量统计",
+        "version": "1.0.0",
+        "description": "统计并展示每篇文章的阅读量",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "analytics",
+        "enabled": true,
+        "installedAt": 1772354579627,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "code-highlight": {
+        "id": "code-highlight",
+        "name": "代码高亮",
+        "version": "1.0.0",
+        "description": "使用 Highlight.js 为代码块添加语法高亮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772354619281,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "theme-editorial": {
+        "id": "theme-editorial",
+        "name": "Editorial",
+        "version": "1.0.0",
+        "description": "文艺出版风 — Playfair Display + 奶油白底色，适合长文阅读",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "theme",
+        "enabled": true,
+        "installedAt": 1772354619363,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "toc": {
+        "id": "toc",
+        "name": "目录导航",
+        "version": "1.0.0",
+        "description": "自动生成文章目录，固定在侧边",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772355561290,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
         },
         "config": {},
         "assetsCached": true

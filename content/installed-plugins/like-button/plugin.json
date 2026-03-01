@@ -1,0 +1,28 @@
+{
+  "id": "like-button",
+  "name": "点赞按钮",
+  "version": "1.0.0",
+  "icon": "❤️",
+  "description": "文章底部添加点赞按钮，支持 localStorage 存储",
+  "longDescription": "在文章底部添加点赞按钮，使用 localStorage 记录用户是否已点赞。推荐与阅读量统计插件配合使用。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "social",
+  "tags": ["like", "reaction", "engagement"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-like-button"
+    }
+  },
+  "slots": ["body"],
+  "allowedRoutes": ["/blog/*"],
+  "dependencies": {
+    "required": [],
+    "recommended": []
+  },
+  "config": {
+    "schema": {}
+  },
+  "revalidation": { "mode": "immediate", "debounceSeconds": 0 }
+}

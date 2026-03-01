@@ -1,0 +1,28 @@
+{
+  "id": "share-buttons",
+  "name": "社交分享",
+  "version": "1.0.0",
+  "icon": "📤",
+  "description": "文章底部添加分享按钮，支持复制链接、Twitter/X、微信等",
+  "longDescription": "在文章底部添加分享按钮，支持 Web Share API、复制链接、Twitter/X 分享。提供简洁的圆形按钮样式。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "social",
+  "tags": ["share", "twitter", "wechat"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-share-buttons"
+    }
+  },
+  "slots": ["body"],
+  "allowedRoutes": ["/blog/*"],
+  "dependencies": {
+    "required": [],
+    "recommended": ["like-button"]
+  },
+  "config": {
+    "schema": {}
+  },
+  "revalidation": { "mode": "immediate", "debounceSeconds": 0 }
+}

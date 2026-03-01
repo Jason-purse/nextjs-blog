@@ -1,0 +1,28 @@
+{
+  "id": "view-count",
+  "name": "阅读量统计",
+  "version": "1.0.0",
+  "icon": "👁️",
+  "description": "统计并展示每篇文章的阅读量",
+  "longDescription": "调用博客 API 获取并展示每篇文章的阅读量，监听路由变化自动刷新。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "analytics",
+  "tags": ["views", "counter", "stats"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-view-count"
+    }
+  },
+  "slots": ["body"],
+  "allowedRoutes": ["/blog/*"],
+  "dependencies": {
+    "required": [],
+    "recommended": []
+  },
+  "config": {
+    "schema": {}
+  },
+  "revalidation": { "mode": "immediate", "debounceSeconds": 0 }
+}

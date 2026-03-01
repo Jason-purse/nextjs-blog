@@ -4,6 +4,12 @@ import { Header } from "@/components/header";
 import { getPostBySlug, getAllPosts } from "@/lib/blog";
 import { MDXContent } from "@/components/mdx-content";
 
+function countWords(content: string): number {
+  const cn = (content.match(/[\u4e00-\u9fa5]/g) || []).length
+  const en = (content.replace(/[\u4e00-\u9fa5]/g, '').match(/\b\w+\b/g) || []).length
+  return cn + en
+}
+
 // ISR：30秒后重新生成，插件开关 30s 内生效
 export const revalidate = 30;
 import { CommentSection } from "@/components/comment-section";
@@ -71,9 +77,28 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     });
   }
 
+  const wordCount = countWords(post.content)
+  const readTimeMins = Math.max(1, Math.ceil(wordCount / 250))
+
   return (
     <div className="min-h-screen">
       <Header />
+
+      {/* Plugin Context：注入文章上下文供插件使用 */}
+      <script dangerouslySetInnerHTML={{ __html: `window.__BLOG_CONTENT_CTX__=${JSON.stringify({
+        slug: post.slug,
+        title: post.title,
+        tags: post.tags || [],
+        category: post.category || '',
+        wordCount,
+        readTimeMins,
+        publishedAt: post.date || '',
+        toc: headings.map((h, i) => ({
+          id: h.id || h.text.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '') + '-' + i,
+          text: h.text,
+          level: h.level
+        }))
+      })}` }} />
 
       <main className="mx-auto max-w-5xl px-4 py-12">
         <div className="lg:grid lg:grid-cols-[1fr_220px] lg:gap-12">

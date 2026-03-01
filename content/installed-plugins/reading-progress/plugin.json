@@ -20,6 +20,11 @@
   },
 
   "slots": ["before-content"],
+  "allowedRoutes": ["*"],
+  "dependencies": {
+    "required": [],
+    "recommended": []
+  },
 
   "config": {
     "schema": {

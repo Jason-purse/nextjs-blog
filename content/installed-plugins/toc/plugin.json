@@ -19,6 +19,11 @@
     }
   },
   "slots": ["body"],
+  "allowedRoutes": ["/blog/*"],
+  "dependencies": {
+    "required": [],
+    "recommended": ["reading-progress"]
+  },
   "config": {
     "schema": {
       "maxDepth": { "type": "select", "label": "最大层级", "default": "h3", "options": [{"value":"h2","label":"仅 H2"},{"value":"h3","label":"H2 + H3"},{"value":"h4","label":"H2-H4"}] },

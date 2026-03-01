@@ -15,7 +15,12 @@
       "element": "blog-reading-time"
     }
   },
-  "slots": ["article-meta"],
+  "slots": ["body"],
+  "allowedRoutes": ["/blog/*"],
+  "dependencies": {
+    "required": [],
+    "recommended": []
+  },
   "config": {
     "schema": {
       "wpm": { "type": "number", "label": "阅读速度(字/分)", "default": 300 },
