@@ -1,6 +1,6 @@
 // blog.config.ts
 // ============================================================
-// AI Blog — Plugin Pipeline 统一入口
+// AI Blog — Plugin Pipeline 统一入口（仅主题/功能插件，无 fs 依赖）
 // input → [plugins] → transform → output
 // ============================================================
 
@@ -16,20 +16,14 @@ export const THEMES = [editorial, minimal, tech, warm]
 export const DEFAULT_THEME = 'editorial'
 
 // ── Pipeline 工厂 ─────────────────────────────────────────────
-// 每次需要处理文章时调用，保持无状态
 export function createPipeline(): BlogPipeline {
   return new BlogPipeline()
-    // #0 主题：必须第一个，其他 plugin 可能依赖主题 ctx
     .use(themePlugin({
       themes: THEMES,
       default: DEFAULT_THEME,
     }))
-
-    // #1 内容分析
     .use(readingTimePlugin())
     .use(tocPlugin({ maxDepth: 3 }))
-
-    // #2 交互功能
     .use(viewCountPlugin())
     .use(commentPlugin({
       repo: 'Jason-purse/nextjs-blog',
@@ -39,14 +33,9 @@ export function createPipeline(): BlogPipeline {
       mapping: 'pathname',
       reactionsEnabled: true,
     }))
-
-    // 未来扩展（按需取消注释）：
-    // .use(bilingualPlugin({ defaultLang: 'zh' }))
-    // .use(aiSummaryPlugin({ provider: 'minimax' }))
-    // .use(syntaxPlugin({ theme: 'github-dark' }))
 }
 
-// ── 单例 pipeline（用于 SSR/SSG 场景） ───────────────────────
+// ── 单例 pipeline（SSR/SSG 场景） ───────────────────────
 let _pipeline: BlogPipeline | null = null
 
 export async function getPipeline(): Promise<BlogPipeline> {

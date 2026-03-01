@@ -1,182 +1,173 @@
 // ============================================================
-// Blog Library - 使用 Pipeline 架构 (兼容版)
+// Blog Library - Pipeline 架构集成层
+// 对外 API 保持不变，内部接入 ContentPipeline
+// SOURCE → PARSER → TRANSFORMER → EMITTER
 // ============================================================
 
-import matter from "gray-matter";
-import readingTime from "reading-time";
-import { storage } from "./storage";
-import { processPost, TransformerMetadata } from "./transformer-pipeline";
+import readingTime from 'reading-time'
+import { ContentPipeline } from '@/lib/pipeline/engine'
+import type { ContentNode } from '@/types/pipeline'
+import { contentPipelineConfig } from '@/lib/content-pipeline.config'
+
+// ============================================================
+// 对外类型（与之前完全一致）
+// ============================================================
 
 export interface PostMeta {
-  slug: string;
-  title: string;
-  date: string;
-  description: string;
-  tags: string[];
-  category?: string;
-  coverImage?: string;
-  author?: string;
-  readingTime?: string;
-  summary?: string;
-  // 扩展元数据
-  wordCount?: number;
-  readTimeMinutes?: number;
-  toc?: Array<{ id: string; text: string; level: number }>;
-  codeBlockCount?: number;
-  imageCount?: number;
-  excerpt?: string;
+  slug: string
+  title: string
+  date: string
+  description: string
+  tags: string[]
+  category?: string
+  coverImage?: string
+  author?: string
+  readingTime?: string
+  summary?: string
+  wordCount?: number
+  readTimeMinutes?: number
+  toc?: Array<{ id: string; text: string; level: number }>
+  codeBlockCount?: number
+  imageCount?: number
+  excerpt?: string
 }
 
 export interface Post extends PostMeta {
-  content: string;
-  renderInjections?: string;
+  content: string
+  renderInjections?: string
 }
 
-async function parsePost(slug: string, raw: string): Promise<Post> {
-  const realSlug = slug.replace(/\.mdx$/, "");
-  const { data, content } = matter(raw);
-  
-  const pipelineResult = await processPost(realSlug, content, data)
-  const meta = pipelineResult.metadata
-  const stats = readingTime(content);
-  
-  return {
-    slug: realSlug,
-    title: data.title,
-    date: data.date,
-    description: data.description || meta.excerpt || "",
-    tags: data.tags || [],
-    category: data.category,
-    coverImage: data.coverImage,
-    author: data.author,
-    summary: data.summary,
-    content: pipelineResult.content,
-    readingTime: stats.text,
-    wordCount: meta.wordCount,
-    readTimeMinutes: meta.readTimeMinutes,
-    toc: meta.toc,
-    codeBlockCount: meta.codeBlocks?.length,
-    imageCount: meta.images?.length,
-    excerpt: meta.excerpt,
-    renderInjections: meta._renderInjections?.join('\n')
-  };
+// ============================================================
+// Pipeline 单例（模块级缓存，避免重复初始化）
+// ============================================================
+
+let _nodesCache: ContentNode[] | null = null
+let _cachePromise: Promise<ContentNode[]> | null = null
+
+async function getNodes(): Promise<ContentNode[]> {
+  if (_nodesCache) return _nodesCache
+
+  // 防并发：多个请求同时触发时只跑一次 pipeline
+  if (_cachePromise) return _cachePromise
+
+  _cachePromise = (async () => {
+    const defaultLogger = {
+      info: (msg: string) => console.log(`[Blog Pipeline] ${msg}`),
+      warn: (msg: string) => console.warn(`[Blog Pipeline] ${msg}`),
+      error: (msg: string, err?: Error) => console.error(`[Blog Pipeline] ${msg}`, err),
+      debug: (msg: string) => console.debug(`[Blog Pipeline] ${msg}`),
+    }
+
+    const defaultCache = new Map<string, unknown>()
+
+    const context = {
+      logger: defaultLogger,
+      config: contentPipelineConfig as any,
+      cache: {
+        get: (key: string) => defaultCache.get(key),
+        set: (key: string, value: unknown) => defaultCache.set(key, value),
+        delete: (key: string) => defaultCache.delete(key),
+      },
+      getNode: () => undefined as ContentNode | undefined,
+      getAllNodes: () => [] as ContentNode[],
+    }
+
+    const pipeline = new ContentPipeline(contentPipelineConfig as any, context)
+    const nodes = await pipeline.run()
+    _nodesCache = nodes
+    _cachePromise = null
+    return nodes
+  })()
+
+  return _cachePromise
 }
+
+// ============================================================
+// ContentNode → PostMeta / Post 转换
+// ============================================================
+
+function nodeToMeta(node: ContentNode): PostMeta {
+  const fm = node.frontmatter
+  const stats = readingTime(node.body)
+
+  return {
+    slug: node.slug,
+    title: (fm.title as string) || node.slug,
+    date: (fm.date as string) || new Date().toISOString(),
+    description: (fm.description as string) || node.excerpt || '',
+    tags: (fm.tags as string[]) || [],
+    category: fm.category as string | undefined,
+    coverImage: fm.coverImage as string | undefined,
+    author: fm.author as string | undefined,
+    summary: fm.summary as string | undefined,
+    readingTime: stats.text,
+    wordCount: Math.floor(stats.words),
+    readTimeMinutes: Math.ceil(stats.minutes),
+    toc: node.toc?.map(t => ({ id: t.id, text: t.text, level: t.depth })),
+    excerpt: node.excerpt,
+  }
+}
+
+function nodeToPost(node: ContentNode): Post {
+  return {
+    ...nodeToMeta(node),
+    content: node.body,
+  }
+}
+
+// ============================================================
+// 公开 API（签名与之前完全一致）
+// ============================================================
 
 export async function getPostSlugs(): Promise<string[]> {
-  const files = await storage.list("posts");
-  return files.filter((f) => f.endsWith(".mdx"));
+  const nodes = await getNodes()
+  return nodes.map(n => n.slug)
 }
 
 export async function getPostBySlug(slug: string): Promise<Post> {
-  const realSlug = slug.replace(/\.mdx$/, "");
-  const raw = await storage.read(`posts/${realSlug}.mdx`);
-  if (!raw) throw new Error(`Post not found: ${realSlug}`);
-  return parsePost(realSlug, raw);
+  const nodes = await getNodes()
+  const node = nodes.find(n => n.slug === slug)
+  if (!node) throw new Error(`Post not found: ${slug}`)
+  return nodeToPost(node)
 }
 
 export async function getAllPosts(): Promise<PostMeta[]> {
-  const slugs = await getPostSlugs();
-  const posts = await Promise.all(
-    slugs.map(async (slug) => {
-      const post = await getPostBySlug(slug);
-      const { content: _, renderInjections: __, ...meta } = post;
-      return meta;
-    })
-  );
-  return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
+  const nodes = await getNodes()
+  return nodes
+    .map(nodeToMeta)
+    .sort((a, b) => (a.date > b.date ? -1 : 1))
 }
 
 export async function getFeaturedPosts(count = 3): Promise<PostMeta[]> {
-  const posts = await getAllPosts();
-  return posts.slice(0, count);
+  const posts = await getAllPosts()
+  return posts.slice(0, count)
 }
 
 export async function getPostsByTag(tag: string): Promise<PostMeta[]> {
-  const posts = await getAllPosts();
-  return posts.filter((p) => p.tags.includes(tag));
+  const posts = await getAllPosts()
+  return posts.filter(p => p.tags.includes(tag))
 }
 
 export async function getAllTags(): Promise<string[]> {
-  const posts = await getAllPosts();
-  const tags = new Set<string>();
-  posts.forEach((p) => p.tags.forEach((t) => tags.add(t)));
-  return Array.from(tags).sort();
+  const posts = await getAllPosts()
+  const tags = new Set<string>()
+  posts.forEach(p => p.tags.forEach(t => tags.add(t)))
+  return Array.from(tags).sort()
 }
 
 export async function getAllCategories(): Promise<string[]> {
-  const posts = await getAllPosts();
-  const cats = new Set<string>();
-  posts.forEach((p) => { if (p.category) cats.add(p.category); });
-  return Array.from(cats).sort();
+  const posts = await getAllPosts()
+  const cats = new Set<string>()
+  posts.forEach(p => { if (p.category) cats.add(p.category) })
+  return Array.from(cats).sort()
 }
 
 export async function getPostsByCategory(category: string): Promise<PostMeta[]> {
-  const posts = await getAllPosts();
-  return posts.filter((p) => p.category === category);
+  const posts = await getAllPosts()
+  return posts.filter(p => p.category === category)
 }
 
 export async function getCategoryPostCount(category: string): Promise<number> {
-  const posts = await getAllPosts();
-  return posts.filter((p) => p.category === category).length;
+  const posts = await getAllPosts()
+  return posts.filter(p => p.category === category).length
 }
-
-// ============================================================
-// 新 Pipeline API (实验性)
-// 暂时注释，等 Pipeline 完善后再启用
-// ============================================================
-
-/*
-import { createPipeline, LocalFileSource, MarkdownParser, ReadingTimeTransformer, TocTransformer, ExcerptTransformer } from "./pipeline";
-
-let pipelineInstance: ReturnType<typeof createPipeline> | null = null;
-
-function getPipeline() {
-  if (!pipelineInstance) {
-    pipelineInstance = createPipeline({
-      sources: [new LocalFileSource({ dir: './content/posts', extensions: ['.md', '.mdx'] })],
-      parsers: [new MarkdownParser()],
-      transformers: [
-        new ReadingTimeTransformer(),
-        new TocTransformer(),
-        new ExcerptTransformer()
-      ],
-      emitters: [],
-      hooks: []
-    });
-  }
-  return pipelineInstance;
-}
-
-export async function getAllPostsViaPipeline() {
-  const pipeline = getPipeline();
-  const nodes = await pipeline.run();
-  return nodes.map(node => ({
-    slug: node.slug,
-    title: node.frontmatter.title,
-    date: node.frontmatter.date,
-    tags: node.frontmatter.tags || [],
-    category: node.frontmatter.category as string | undefined,
-    readingTime: node.readingTime,
-    toc: node.toc,
-    excerpt: node.excerpt
-  }));
-}
-
-export async function getPostBySlugViaPipeline(slug: string) {
-  const pipeline = getPipeline();
-  const nodes = await pipeline.run();
-  const node = nodes.find(n => n.slug === slug);
-  if (!node) return null;
-  return {
-    slug: node.slug,
-    title: node.frontmatter.title,
-    date: node.frontmatter.date,
-    content: node.body,
-    tags: node.frontmatter.tags || [],
-    category: node.frontmatter.category as string | undefined,
-    readingTime: node.readingTime,
-    toc: node.toc,
-    excerpt: node.excerpt
-  };
-}
-*/

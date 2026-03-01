@@ -29,13 +29,14 @@ export class StorageSource implements SourcePlugin {
 
     for (const file of filtered) {
       try {
-        const raw = await storage.read(file)
+        // storage.list() 只返回文件名（如 'typescript-tips.mdx'），不含目录前缀
+        // storage.read() 需要完整相对路径（如 'posts/typescript-tips.mdx'）
+        const fullPath = prefix ? `${prefix}/${file}` : file
+        const raw = await storage.read(fullPath)
         if (!raw) continue
         
-        // 提取 slug: posts/typescript-tips.mdx -> typescript-tips
-        const slug = file
-          .replace(/^posts\//, '')
-          .replace(/\.(md|mdx)$/, '')
+        // 提取 slug：去掉扩展名
+        const slug = file.replace(/\.(md|mdx)$/, '')
 
         contents.push({
           id: slug,
@@ -43,8 +44,8 @@ export class StorageSource implements SourcePlugin {
           mimeType: file.endsWith('.mdx') ? 'text/mdx' : 'text/markdown',
           body: raw,
           meta: {
-            filePath: file,
-            relativePath: file
+            filePath: fullPath,
+            relativePath: fullPath
           }
         })
       } catch (err) {
