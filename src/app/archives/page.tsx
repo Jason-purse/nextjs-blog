@@ -1,117 +1,50 @@
-import Link from "next/link";
-import { Header } from "@/components/header";
-import { getAllPosts } from "@/lib/blog";
+import { getAllPosts } from '@/lib/blog'
+import { Header } from '@/components/header'
+import Link from 'next/link'
 
-interface YearMonth {
-  year: number;
-  month: number;
-  monthName: string;
-  posts: {
-    slug: string;
-    title: string;
-    date: string;
-  }[];
-}
-
-function groupPostsByYearMonth(posts: Awaited<ReturnType<typeof getAllPosts>>): YearMonth[] {
-  const groups: Map<string, YearMonth> = new Map();
-
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  posts.forEach((post) => {
-    const date = new Date(post.date);
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
-
-    if (!groups.has(key)) {
-      groups.set(key, {
-        year: date.getFullYear(),
-        month: date.getMonth(),
-        monthName: monthNames[date.getMonth()],
-        posts: [],
-      });
-    }
-
-    groups.get(key)!.posts.push({
-      slug: post.slug,
-      title: post.title,
-      date: post.date,
-    });
-  });
-
-  // Sort posts within each month by date (newest first)
-  groups.forEach((group) => {
-    group.posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  });
-
-  // Sort groups by date (newest first)
-  return Array.from(groups.values()).sort(
-    (a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      return b.month - a.month;
-    }
-  );
-}
+export const revalidate = 60
 
 export default async function ArchivesPage() {
-  const posts = await getAllPosts();
-  const groupedPosts = groupPostsByYearMonth(posts);
+  const posts = await getAllPosts()
+  
+  // 按年份分组
+  const byYear: Record<string, typeof posts> = {}
+  posts.forEach(post => {
+    const year = new Date(post.date).getFullYear().toString()
+    if (!byYear[year]) byYear[year] = []
+    byYear[year].push(post)
+  })
+
+  const years = Object.keys(byYear).sort((a, b) => Number(b) - Number(a))
 
   return (
     <div className="min-h-screen">
       <Header />
-
-      <main className="mx-auto max-w-5xl px-4 py-12">
-        <div className="mb-12">
-          <h1 className="font-serif text-3xl font-semibold sm:text-4xl">
-            Archives
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            All blog posts grouped by year and month.
-          </p>
-        </div>
-
+      <main className="mx-auto max-w-4xl px-4 py-12">
+        <h1 className="font-serif text-4xl font-bold mb-12">归档</h1>
+        
         <div className="space-y-12">
-          {groupedPosts.map((group) => (
-            <div key={`${group.year}-${group.month}`}>
-              <h2 className="font-serif text-2xl font-semibold">
-                {group.monthName} {group.year}
+          {years.map(year => (
+            <section key={year}>
+              <h2 className="text-2xl font-semibold mb-4 pb-2 border-b border-border">
+                {year} <span className="text-muted-foreground text-lg font-normal">({byYear[year].length} 篇)</span>
               </h2>
-              <ul className="mt-4 space-y-3">
-                {group.posts.map((post) => (
+              <ul className="space-y-3">
+                {byYear[year].map(post => (
                   <li key={post.slug}>
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="group flex items-center gap-3"
-                    >
-                      <time
-                        dateTime={post.date}
-                        className="text-sm text-muted-foreground w-28"
-                      >
-                        {new Date(post.date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </time>
-                      <span className="transition-colors group-hover:text-primary">
-                        {post.title}
+                    <Link href={`/blog/${post.slug}`} className="flex items-center gap-3 group">
+                      <span className="text-muted-foreground text-sm w-20">
+                        {new Date(post.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                       </span>
+                      <span className="group-hover:text-primary transition-colors">{post.title}</span>
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           ))}
         </div>
       </main>
-
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto max-w-5xl px-4 text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} AI Blog. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
-  );
+  )
 }
