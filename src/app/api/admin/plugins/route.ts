@@ -3,8 +3,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { validateToken } from '@/lib/auth'
 import { storage } from '@/lib/storage'
+import { prewarmAllPosts } from '@/lib/prewarm'
 
 const SETTINGS_FILE = 'settings.json'
 
@@ -92,7 +94,16 @@ export async function POST(req: NextRequest) {
   const shouldRevalidateNow = revalidation.mode === 'immediate'
   if (shouldRevalidateNow) {
     revalidatePath('/blog', 'layout')
+    revalidatePath('/blog', 'page')
     revalidatePath('/blog/[slug]', 'page')
+    revalidatePath('/', 'page')
+
+    // after()：响应返回后后台 pre-warm，让所有用户第一次访问就拿到新页面
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+      ?? `https://${req.headers.get('host')}`
+    after(async () => {
+      await prewarmAllPosts(baseUrl)
+    })
   }
 
   return NextResponse.json({
