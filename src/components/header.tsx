@@ -22,6 +22,33 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [pageLinks, setPageLinks] = useState<Array<{href: string; label: string}>>([])
+
+  useEffect(() => {
+    fetch('/api/plugins/runtime')
+      .then(r => r.json())
+      .then((plugins: any) => {
+        const pages = plugins
+          .filter((p: any) => p.formats?.page?.nav)
+          .map((p: any) => ({
+            href: p.formats.page.nav.location === 'header' ? p.formats.page.route : '',
+            label: p.formats.page.nav.label || p.name
+          }))
+          .filter((p: any) => p.href)
+        setPageLinks(pages)
+      })
+      .catch(() => {})
+  }, [])
+
+  const navLinks = [
+    { href: "/blog",       label: "Blog" },
+    { href: "/archives",   label: "Archives" },
+    { href: "/categories", label: "Categories" },
+    { href: "/search",    label: "Search" },
+    { href: "/about",     label: "About" },
+    ...pageLinks
+  ]
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md transition-colors duration-300">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
@@ -30,13 +57,7 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-6">
-          {[
-            { href: "/blog",       label: "Blog" },
-            { href: "/archives",   label: "Archives" },
-            { href: "/categories", label: "Categories" },
-            { href: "/search",     label: "Search" },
-            { href: "/about",      label: "About" },
-          ].map(({ href, label }) => (
+          {navLinks.map(({ href, label }) => (
             <Link key={href} href={href}
               className="text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
               {label}
