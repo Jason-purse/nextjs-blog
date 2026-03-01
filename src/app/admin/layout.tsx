@@ -2,6 +2,7 @@
 // src/app/admin/layout.tsx
 // Admin 全局布局：侧边栏导航
 
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
@@ -15,6 +16,14 @@ const NAV = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [pluginNav, setPluginNav] = useState<Array<{id: string; name: string; icon: string; nav: {label: string; icon: string}}>>([])
+
+  useEffect(() => {
+    fetch('/api/admin/plugin-nav')
+      .then(r => r.json())
+      .then(setPluginNav)
+      .catch(() => {})
+  }, [])
 
   // 登录页不显示侧边栏
   if (pathname === '/admin/login') return <>{children}</>
@@ -57,6 +66,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             )
           })}
+
+          {/* 插件扩展导航 */}
+          {pluginNav.length > 0 && (
+            <>
+              <div style={{ padding: '12px 12px 4px', fontSize: 11, color: 'var(--muted-foreground)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                插件
+              </div>
+              {pluginNav.map(p => {
+                const href = `/admin/ext/${p.id}`
+                const isActive = pathname.startsWith(href)
+                return (
+                  <Link key={href} href={href} style={{ textDecoration: 'none' }}>
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '9px 12px', borderRadius: 8, marginBottom: 2,
+                      fontSize: 14, fontWeight: isActive ? 500 : 400,
+                      background: isActive ? 'var(--secondary)' : 'transparent',
+                      color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
+                      transition: 'all 0.15s',
+                    }}>
+                      <span>{p.nav.icon || p.icon}</span>
+                      <span>{p.nav.label || p.name}</span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </>
+          )}
         </nav>
 
         {/* 底部：查看站点 */}
