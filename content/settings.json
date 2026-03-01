@@ -68,6 +68,46 @@
         },
         "config": {},
         "assetsCached": true
+      },
+      "toc": {
+        "id": "toc",
+        "name": "目录导航",
+        "version": "1.0.0",
+        "description": "自动生成文章目录，固定在侧边",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772352961283,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "code-highlight": {
+        "id": "code-highlight",
+        "name": "代码高亮",
+        "version": "1.0.0",
+        "description": "使用 Highlight.js 为代码块添加语法高亮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772353317206,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
       }
     },
     "activeTheme": "theme-editorial"

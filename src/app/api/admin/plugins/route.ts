@@ -144,6 +144,25 @@ async function cachePluginAssets(id: string, source: string): Promise<boolean> {
       }
     }
 
+    // 5. 下载 CDN 依赖（本地化，彻底移除运行时外部依赖）
+    const cdnDeps = manifest?.cdnDeps as { url: string; dest: string }[] | undefined
+    if (cdnDeps?.length) {
+      await Promise.allSettled(cdnDeps.map(async ({ url, dest }) => {
+        try {
+          const res = await fetch(url)
+          if (!res.ok) { console.warn(`[plugin] CDN fetch failed: ${url}`); return }
+          const content = await res.text()
+          await storage.write(
+            `installed-plugins/${id}/${dest}`,
+            content,
+            `plugin: install ${id} — cache cdn ${dest}`
+          )
+        } catch (e) {
+          console.warn(`[plugin] CDN dep download failed: ${url}`, e)
+        }
+      }))
+    }
+
     return true
   } catch (e) {
     console.error(`[plugin] cachePluginAssets failed for ${id}:`, e)

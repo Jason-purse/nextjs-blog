@@ -1,0 +1,29 @@
+{
+  "id": "toc",
+  "name": "目录导航",
+  "version": "1.0.0",
+  "icon": "📋",
+  "description": "自动生成文章目录，固定在侧边",
+  "longDescription": "自动提取文章中的标题标签生成侧边栏目录，支持滚动时高亮当前章节。帮助读者快速导航长文章。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "content",
+  "tags": ["toc", "navigation", "sidebar"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-toc"
+    },
+    "css": {
+      "entry": "css/index.css"
+    }
+  },
+  "slots": ["body"],
+  "config": {
+    "schema": {
+      "maxDepth": { "type": "select", "label": "最大层级", "default": "h3", "options": [{"value":"h2","label":"仅 H2"},{"value":"h3","label":"H2 + H3"},{"value":"h4","label":"H2-H4"}] },
+      "position": { "type": "select", "label": "位置", "default": "right", "options": [{"value":"right","label":"右侧"},{"value":"left","label":"左侧"}] }
+    }
+  },
+  "revalidation": { "mode": "immediate", "debounceSeconds": 0 }
+}
