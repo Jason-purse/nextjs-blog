@@ -34,12 +34,12 @@ export function middleware(request: NextRequest) {
       ].join("; ")
     : [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://giscus.app",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://giscus.app https://raw.githubusercontent.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "img-src 'self' data: blob: https:",
         "font-src 'self' data: https://fonts.gstatic.com",
-        // 允许 Giscus 评论、外��� API
-        "connect-src 'self' https://giscus.app https://api.github.com",
+        // 允许 Giscus、GitHub API、注册表插件 JS 加载
+        "connect-src 'self' https://giscus.app https://api.github.com https://raw.githubusercontent.com",
         "frame-src https://giscus.app",
         "frame-ancestors 'none'",
       ].join("; ");

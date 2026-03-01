@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PluginLoader } from "@/components/plugin-loader";
+import { PluginRuntime } from "@/components/plugin-runtime";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -64,7 +65,12 @@ export default function RootLayout({
         {/* Slot: 进度条插件挂载点 */}
         <div className="blog-reading-progress" aria-hidden="true" />
         <ThemeProvider>
+          {/* JS 插件客户端 Runtime */}
+          <PluginRuntime />
+          {/* Slot 容器：JS 插件挂载到这里 */}
+          <div data-blog-slot="before-content" />
           {children}
+          <div data-blog-slot="after-content" />
         </ThemeProvider>
       </body>
     </html>
