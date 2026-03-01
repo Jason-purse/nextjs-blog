@@ -169,26 +169,6 @@
         "config": {},
         "assetsCached": true
       },
-      "code-highlight": {
-        "id": "code-highlight",
-        "name": "代码高亮",
-        "version": "1.0.0",
-        "description": "使用 Highlight.js 为代码块添加语法高亮",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "content",
-        "enabled": true,
-        "installedAt": 1772363394554,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 60
-        },
-        "config": {},
-        "assetsCached": true
-      },
       "guestbook": {
         "id": "guestbook",
         "name": "留言板",
@@ -204,6 +184,32 @@
         "installedAt": 1772363682768,
         "revalidation": {
           "mode": "immediate"
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "code-highlight": {
+        "id": "code-highlight",
+        "name": "代码高亮",
+        "version": "1.0.0",
+        "description": "使用 Highlight.js 为代码块添加语法高亮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": "1772381002579",
+        "tags": [
+          "code",
+          "highlight",
+          "syntax"
+        ],
+        "source": "plugins/content/code-highlight",
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
         },
         "config": {},
         "assetsCached": true
