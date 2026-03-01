@@ -3,10 +3,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { after } from 'next/server'
 import { validateToken } from '@/lib/auth'
 import { storage } from '@/lib/storage'
-import { prewarmAllPosts } from '@/lib/prewarm'
 
 const SETTINGS_FILE = 'settings.json'
 
@@ -90,28 +88,20 @@ export async function POST(req: NextRequest) {
   settings.plugins = { ...(settings.plugins ?? {}), installed: next }
   await saveSettings(settings)
 
-  // 按策略决定是否立刻 revalidate
-  const shouldRevalidateNow = revalidation.mode === 'immediate'
-  if (shouldRevalidateNow) {
+  // immediate：直接让缓存失效，下一个真实用户的请求会触发 ISR 重建
+  if (revalidation.mode === 'immediate') {
     revalidatePath('/blog', 'layout')
     revalidatePath('/blog', 'page')
     revalidatePath('/blog/[slug]', 'page')
     revalidatePath('/', 'page')
-
-    // after()：响应返回后后台 pre-warm，让所有用户第一次访问就拿到新页面
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
-      ?? `https://${req.headers.get('host')}`
-    after(async () => {
-      await prewarmAllPosts(baseUrl)
-    })
   }
+  // debounced：不立刻 revalidate，客户端倒计时结束后调 /api/admin/revalidate
 
   return NextResponse.json({
     success: true,
     installed: next,
     revalidation: {
       mode: revalidation.mode,
-      // debounced 时把 debounceSeconds 返回给客户端，由客户端倒计时
       debounceSeconds: revalidation.mode === 'debounced'
         ? (revalidation.debounceSeconds as number ?? 120)
         : 0,
