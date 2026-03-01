@@ -2,6 +2,7 @@
 // 服务端组件：注入已启用插件的 CSS 变量 + 样式
 // 优先读 blog-content/installed-plugins/{id}/ 缓存，fallback 才请求 blog-plugins
 
+import React from 'react'
 import { storage } from '@/lib/storage'
 import type { ConfigSchema } from '@/types/plugin'
 
@@ -116,14 +117,14 @@ export async function PluginLoader() {
   return (
     <>
       {valid.map(({ id, cssVars, css }) => (
-        <span key={id}>
+        <React.Fragment key={id}>
           {cssVars && (
             <style data-plugin-vars={id} dangerouslySetInnerHTML={{ __html: `:root { ${cssVars} }` }} />
           )}
           {css && (
             <style data-plugin={id} dangerouslySetInnerHTML={{ __html: css }} />
           )}
-        </span>
+        </React.Fragment>
       ))}
     </>
   )
