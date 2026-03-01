@@ -7,6 +7,7 @@ import { CommentSection } from "@/components/comment-section";
 import { ViewCount } from "@/components/view-count";
 import { AISummary } from "@/components/ai-summary";
 import { GiscusComments } from "@/components/giscus-comments";
+import { isPluginEnabled } from "@/lib/plugin-settings";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -48,6 +49,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const allPosts = await getAllPosts();
+  const aiSummaryEnabled   = await isPluginEnabled('ai-summary')
+  const giscusEnabled      = await isPluginEnabled('giscus-comments')
   const currentIndex = allPosts.findIndex((p) => p.slug === slug);
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
@@ -110,8 +113,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
             </div>
 
-            {/* AI Summary */}
-            <AISummary summary={post.summary || ""} />
+            {/* AI Summary — 受插件开关控制 */}
+            {aiSummaryEnabled && <AISummary summary={post.summary || ""} />}
 
             {/* Content */}
             <div className="prose">
@@ -148,8 +151,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               )}
             </nav>
 
-            {/* Comments */}
-            <GiscusComments identifier={`/blog/${slug}`} />
+            {/* Comments — 受插件开关控制 */}
+            {giscusEnabled && <GiscusComments identifier={`/blog/${slug}`} />}
           </article>
 
           {/* Table of Contents - Desktop */}
