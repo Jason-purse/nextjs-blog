@@ -90,6 +90,7 @@ export async function GET() {
         cached:  !!(await storage.read(`installed-plugins/${id}/plugin.json`)),
         allowedRoutes: (manifest.allowedRoutes as string[] | undefined) ?? ['*'],
         dependencies: manifest.dependencies as { required: string[]; recommended: string[] } | undefined,
+        formats: manifest.formats,  // 返回完整 formats，包含 adminPage/page 等
       }
     })
   )
