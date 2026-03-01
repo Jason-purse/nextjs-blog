@@ -119,8 +119,18 @@ export default function PluginsPage() {
     setWorking(id)
     const res = await fetch('/api/admin/plugins', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, revalidation: edit }) })
     if (res.ok) {
+      // 取保存后的实际模式（edit 优先，否则保留原值）
+      const plugin = plugins.find(p => p.id === id)
+      const effectiveMode = edit.mode ?? plugin?.revalidation.mode
       setPlugins(prev => prev.map(p => p.id === id ? { ...p, revalidation: { ...p.revalidation, ...edit } } : p))
       setEditReval(prev => { const n = { ...prev }; delete n[id]; return n })
+      // 立即生效 → 直接重建；延迟生效 → 启动倒计时
+      if (effectiveMode === 'immediate') {
+        await fetch('/api/admin/revalidate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      } else if (effectiveMode === 'debounced') {
+        const secs = edit.debounceSeconds ?? plugin?.revalidation.debounceSeconds ?? 30
+        startCountdown(secs)
+      }
     }
     setWorking(null)
   }
