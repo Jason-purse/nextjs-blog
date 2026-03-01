@@ -74,6 +74,7 @@ export interface InstalledPlugin {
   installedAt: number
   revalidation: PluginRevalidation
   config: Record<string, unknown>
+  assetsCached?: boolean   // 资源是否已缓存到 blog-content/installed-plugins/{id}/
 }
 
 // API 返回的合并视图

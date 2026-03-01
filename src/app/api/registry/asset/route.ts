@@ -1,42 +1,65 @@
 // src/app/api/registry/asset/route.ts
-// 代理注册表仓库的静态资源
-// 作用：token 留在服务端，客户端拿不到；顺便做 checksum 校验
+// 代理插件静态资源（WC JS / CSS）
+// 优先从 blog-content/installed-plugins/{id}/ 缓存读取，fallback 才请求 blog-plugins
+// Token 留服务端，客户端不可见
+
 import { NextRequest, NextResponse } from 'next/server'
+import { storage } from '@/lib/storage'
 
 const TOKEN  = process.env.GITHUB_TOKEN
-const REPO   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-plugins'
+const REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
 const BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
+
+// 从路径推断插件 id 和相对路径
+// 例：plugins/ui/reading-progress/webcomponent/index.js
+//  → id = reading-progress, rel = webcomponent/index.js
+function parsePluginPath(path: string): { id: string; rel: string } | null {
+  // 格式：plugins/{category}/{id}/{rel...}
+  const m = path.match(/^plugins\/[^/]+\/([^/]+)\/(.+)$/)
+  if (m) return { id: m[1], rel: m[2] }
+  return null
+}
+
+function contentType(path: string) {
+  if (path.endsWith('.css'))  return 'text/css'
+  if (path.endsWith('.js'))   return 'application/javascript'
+  if (path.endsWith('.json')) return 'application/json'
+  return 'text/plain'
+}
 
 export async function GET(req: NextRequest) {
   const path = req.nextUrl.searchParams.get('path')
   if (!path) return NextResponse.json({ error: 'missing path' }, { status: 400 })
-
-  // 只允许安全路径，防止目录穿越
-  if (path.includes('..') || path.startsWith('/')) {
+  if (path.includes('..') || path.startsWith('/'))
     return NextResponse.json({ error: 'invalid path' }, { status: 400 })
+
+  const ct = contentType(path)
+
+  // 1. 优先读 blog-content 缓存
+  const parsed = parsePluginPath(path)
+  if (parsed) {
+    const cached = await storage.read(`installed-plugins/${parsed.id}/${parsed.rel}`)
+    if (cached) {
+      return new NextResponse(cached, {
+        headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=3600', 'X-Asset-Source': 'cache' }
+      })
+    }
   }
 
-  const url = `https://api.github.com/repos/${REPO}/contents/${path}?ref=${BRANCH}`
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/vnd.github.v3+json',
-      ...(TOKEN && { Authorization: `Bearer ${TOKEN}` }),
-    },
-    next: { revalidate: 300 }, // 5 分钟缓存
-  })
-
+  // 2. Fallback：从 blog-plugins 拉取
+  const res = await fetch(
+    `https://api.github.com/repos/${REPO}/contents/${path}?ref=${BRANCH}`,
+    {
+      headers: { Accept: 'application/vnd.github.v3+json', ...(TOKEN && { Authorization: `Bearer ${TOKEN}` }) },
+      next: { revalidate: 300 },
+    }
+  )
   if (!res.ok) return NextResponse.json({ error: 'not found' }, { status: 404 })
 
   const data = await res.json()
   const content = Buffer.from(data.content, 'base64').toString('utf-8')
 
-  // 根据文件类型设置 Content-Type
-  const ct = path.endsWith('.css') ? 'text/css'
-    : path.endsWith('.js')  ? 'application/javascript'
-    : path.endsWith('.json') ? 'application/json'
-    : 'text/plain'
-
   return new NextResponse(content, {
-    headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=300' }
+    headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=300', 'X-Asset-Source': 'origin' }
   })
 }

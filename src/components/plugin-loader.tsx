@@ -1,23 +1,24 @@
 // src/components/plugin-loader.tsx
-// 服务端组件：加载已启用插件的 CSS，并注入用户配置为 CSS 变量
-// 路径格式：plugins/{category}/{id}（来自 registry.json 的 source 字段）
+// 服务端组件：注入已启用插件的 CSS 变量 + 样式
+// 优先读 blog-content/installed-plugins/{id}/ 缓存，fallback 才请求 blog-plugins
 
 import { storage } from '@/lib/storage'
 import type { ConfigSchema } from '@/types/plugin'
 
-const REGISTRY_REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
-const REGISTRY_BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
-const TOKEN           = process.env.GITHUB_TOKEN
+const PLUGINS_REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
+const PLUGINS_BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
+const TOKEN          = process.env.GITHUB_TOKEN
 
 const GH_HEADERS = {
   Accept: 'application/vnd.github.v3+json',
   ...(TOKEN && { Authorization: `Bearer ${TOKEN}` }),
 }
 
-async function fetchFile(path: string): Promise<string | null> {
+// Fallback：从 blog-plugins 拉文件
+async function fetchFromPluginsRepo(path: string): Promise<string | null> {
   try {
     const res = await fetch(
-      `https://api.github.com/repos/${REGISTRY_REPO}/contents/${path}?ref=${REGISTRY_BRANCH}`,
+      `https://api.github.com/repos/${PLUGINS_REPO}/contents/${path}?ref=${PLUGINS_BRANCH}`,
       { headers: GH_HEADERS, next: { revalidate: 300 } }
     )
     if (!res.ok) return null
@@ -26,32 +27,47 @@ async function fetchFile(path: string): Promise<string | null> {
   } catch { return null }
 }
 
-// 从 registry.json 批量获取 source 映射表
-let registryCache: { plugins: { id: string; source: string }[] } | null = null
-async function getRegistry() {
-  if (registryCache) return registryCache
-  const raw = await fetchFile('registry.json')
-  if (!raw) return null
-  registryCache = JSON.parse(raw)
-  return registryCache
+// 读 plugin.json：优先缓存，fallback 源仓库
+async function readManifest(id: string, source: string): Promise<Record<string, unknown> | null> {
+  // 先读 blog-content 缓存
+  const cached = await storage.read(`installed-plugins/${id}/plugin.json`)
+  if (cached) return JSON.parse(cached)
+  // fallback
+  const raw = await fetchFromPluginsRepo(`${source}/plugin.json`)
+  return raw ? JSON.parse(raw) : null
 }
 
-// 从 schema 默认值 + 用户 config 生成 CSS 变量字符串
+// 读 CSS：优先缓存，fallback 源仓库
+async function readCSS(id: string, source: string, cssEntry: string): Promise<string | null> {
+  const cached = await storage.read(`installed-plugins/${id}/${cssEntry}`)
+  if (cached) return cached
+  return fetchFromPluginsRepo(`${source}/${cssEntry}`)
+}
+
+// 从 registry.json 获取 source 路径（缓存 5 分钟）
+let regCache: { plugins: { id: string; source: string }[] } | null = null
+async function getRegistry() {
+  if (regCache) return regCache
+  const raw = await fetchFromPluginsRepo('registry.json')
+  if (!raw) return null
+  regCache = JSON.parse(raw)
+  return regCache
+}
+
+// 将用户 config 合并 schema defaults，生成 CSS 变量字符串
 function buildCssVars(schema: ConfigSchema, userConfig: Record<string, unknown>): string {
-  const vars: string[] = []
-  for (const [key, field] of Object.entries(schema)) {
-    if (!field.cssVar) continue
-    const value = userConfig[key] ?? (field as { default: unknown }).default
-    if (value === undefined || value === null) continue
-    // range/number: 可能需要加单位
-    const unit = (field as { unit?: string }).unit ?? ''
-    vars.push(`${field.cssVar}: ${value}${unit}`)
-  }
-  return vars.join('; ')
+  return Object.entries(schema)
+    .filter(([, field]) => field.cssVar)
+    .map(([key, field]) => {
+      const value = userConfig[key] ?? (field as { default: unknown }).default
+      const unit  = (field as { unit?: string }).unit ?? ''
+      return `${field.cssVar}: ${value}${unit}`
+    })
+    .join('; ')
 }
 
 export async function PluginLoader() {
-  // 读 settings.json，获取已启用插件及其用户 config
+  // 读 settings.json：取已启用插件 id + 用户 config
   let installedMap: Record<string, Record<string, unknown>> = {}
   try {
     const raw = await storage.read('settings.json')
@@ -63,7 +79,6 @@ export async function PluginLoader() {
           if (info?.enabled) installedMap[id] = info.config ?? {}
         }
       } else {
-        // 旧格式降级
         for (const id of (settings?.plugins?.installed ?? []) as string[]) {
           installedMap[id] = {}
         }
@@ -74,33 +89,27 @@ export async function PluginLoader() {
   const installedIds = Object.keys(installedMap)
   if (installedIds.length === 0) return null
 
+  // 获取 source 路径映射（用于 fallback）
   const reg = await getRegistry()
-  if (!reg) return null
-
-  const sourceMap = Object.fromEntries(reg.plugins.map(p => [p.id, p.source]))
+  const sourceMap = Object.fromEntries((reg?.plugins ?? []).map(p => [p.id, p.source]))
 
   const results = await Promise.all(
     installedIds.map(async (id) => {
-      const source = sourceMap[id]
-      if (!source) return null
+      const source = sourceMap[id] ?? `plugins/content/${id}` // safe fallback
 
-      // 读 plugin.json 获取 schema 和 cssEntry
-      const manifestRaw = await fetchFile(`${source}/plugin.json`)
-      if (!manifestRaw) return null
-      const manifest = JSON.parse(manifestRaw)
+      const manifest = await readManifest(id, source)
+      if (!manifest) return null
 
-      const cssEntry: string | undefined = manifest?.formats?.css?.entry
-      const schema: ConfigSchema = manifest?.config?.schema ?? {}
+      const cssEntry: string | undefined = (manifest?.formats as Record<string, { entry?: string }>)?.css?.entry
+      const schema: ConfigSchema = (manifest?.config as { schema?: ConfigSchema })?.schema ?? {}
       const userConfig = installedMap[id]
 
-      // 生成 CSS 变量
+      // CSS 变量（用户配置合并 schema 默认值）
       const cssVars = buildCssVars(schema, userConfig)
 
-      // 读插件 CSS
+      // CSS 内容
       let css: string | null = null
-      if (cssEntry) {
-        css = await fetchFile(`${source}/${cssEntry}`)
-      }
+      if (cssEntry) css = await readCSS(id, source, cssEntry)
 
       return { id, cssVars, css }
     })
@@ -113,7 +122,6 @@ export async function PluginLoader() {
     <>
       {valid.map(({ id, cssVars, css }) => (
         <span key={id}>
-          {/* 先注入配置变量，再注入插件 CSS（插件 CSS 使用 var() 引用） */}
           {cssVars && (
             <style data-plugin-vars={id} dangerouslySetInnerHTML={{ __html: `:root { ${cssVars} }` }} />
           )}
