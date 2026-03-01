@@ -23,17 +23,34 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nextjs-blog-rose-omega-77.vercel.app'
   try {
     const post = await getPostBySlug(slug);
     return {
       title: post.title,
       description: post.description,
+      authors: [{ name: post.author || 'AI Blogger' }],
       openGraph: {
         title: post.title,
         description: post.description,
-        type: "article",
+        type: 'article',
         publishedTime: post.date,
-        tags: post.tags,
+        modifiedTime: post.date,
+        tags: post.tags || [],
+        authors: [post.author || 'AI Blogger'],
+        url: `${SITE_URL}/blog/${slug}`,
+        siteName: 'AI Blog',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.description,
+        creator: '@jason_fkj',
+        images: post.coverImage ? [`${SITE_URL}${post.coverImage}`] : [],
+      },
+      other: {
+        'article:published_time': post.date,
+        'article:author': post.author || 'AI Blogger',
       },
     };
   } catch {
@@ -88,6 +105,30 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <script dangerouslySetInnerHTML={{ __html: post.renderInjections }} />
       )}
 
+      {/* JSON-LD Structured Data */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": post.title,
+        "description": post.description,
+        "author": {
+          "@type": "Person",
+          "name": post.author || "AI Blogger"
+        },
+        "datePublished": post.date,
+        "dateModified": post.date,
+        "url": `https://nextjs-blog-rose-omega-77.vercel.app/blog/${slug}`,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": `https://nextjs-blog-rose-omega-77.vercel.app/blog/${slug}`
+        },
+        "wordCount": wordCount,
+        "timeRequired": `PT${readTimeMins}M`,
+        "articleSection": post.category || "Blog",
+        "keywords": (post.tags || []).join(", "),
+        "image": post.coverImage || undefined
+      }) }} />
+
       <main className="mx-auto max-w-5xl px-4 py-12">
         <div className="lg:grid lg:grid-cols-[1fr_220px] lg:gap-12">
           {/* Article */}
@@ -117,7 +158,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <ViewCount slug={slug} />
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {post.tags.map((tag) => (
+                {post.tags?.map((tag: string) => (
                   <Link
                     key={tag}
                     href={`/blog?tag=${tag}`}

@@ -11,6 +11,7 @@ export interface PostMeta {
   tags: string[];
   category?: string;
   coverImage?: string;
+  author?: string;
   readingTime?: string;
   summary?: string;
   // 扩展元数据（来自 Transformer Pipeline）
@@ -47,6 +48,7 @@ async function parsePost(slug: string, raw: string): Promise<Post> {
     tags: data.tags || [],
     category: data.category,
     coverImage: data.coverImage,
+    author: data.author,
     summary: data.summary,
     content: pipelineResult.content,  // 可能已被转换器修改
     readingTime: stats.text,

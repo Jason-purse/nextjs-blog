@@ -49,7 +49,7 @@ export async function GET() {
       <guid>${SITE_URL}/blog/${p!.slug}</guid>
       <pubDate>${new Date(p!.date).toUTCString()}</pubDate>
       <description><![CDATA[${p!.description}]]></description>
-      ${p!.tags.map(t => `<category>${t}</category>`).join('\n      ')}
+      ${(p!.tags || []).map((t: string) => `<category>${t}</category>`).join('\n      ')}
     </item>
     `).join('')}
   </channel>
