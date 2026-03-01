@@ -38,14 +38,14 @@
           justify-content: center;
           padding: 16px;
           margin-top: 24px;
-          border-top: 1px solid #e5e7eb;
+          border-top: 1px solid var(--blog-color-border, #e5e7eb);
         ">
           <button class="share-btn copy-link" data-action="copy" title="复制链接" style="
             width: 40px;
             height: 40px;
             border-radius: 50%;
             border: none;
-            background: #f3f4f6;
+            background: var(--blog-color-border, #f3f4f6);
             cursor: pointer;
             font-size: 18px;
             display: flex;

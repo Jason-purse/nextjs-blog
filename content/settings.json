@@ -9,166 +9,6 @@
   "translationEnabled": false,
   "plugins": {
     "registry": {
-      "share-buttons": {
-        "id": "share-buttons",
-        "name": "社交分享",
-        "version": "1.0.0",
-        "description": "文章底部添加分享按钮，支持复制链接、Twitter/X、微信等",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "social",
-        "enabled": true,
-        "installedAt": 1772354579532,
-        "revalidation": {
-          "mode": "immediate",
-          "debounceSeconds": 0
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "like-button": {
-        "id": "like-button",
-        "name": "点赞按钮",
-        "version": "1.0.0",
-        "description": "文章底部添加点赞按钮，支持 localStorage 存储",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "social",
-        "enabled": true,
-        "installedAt": 1772354579577,
-        "revalidation": {
-          "mode": "immediate",
-          "debounceSeconds": 0
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "reading-time": {
-        "id": "reading-time",
-        "name": "阅读时间",
-        "version": "1.0.0",
-        "description": "自动计算并显示预计阅读时间",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "content",
-        "enabled": true,
-        "installedAt": 1772354579274,
-        "revalidation": {
-          "mode": "immediate",
-          "debounceSeconds": 0
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "dark-mode": {
-        "id": "dark-mode",
-        "name": "深色模式切换",
-        "version": "1.0.0",
-        "description": "为博客添加深色/浅色模式切换按钮",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "ui",
-        "enabled": true,
-        "installedAt": 1772354579339,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 60
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "back-to-top": {
-        "id": "back-to-top",
-        "name": "回到顶部",
-        "version": "1.0.0",
-        "description": "平滑滚动回顶部的浮动按钮",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "ui",
-        "enabled": true,
-        "installedAt": 1772354579415,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 60
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "reading-progress": {
-        "id": "reading-progress",
-        "name": "阅读进度条",
-        "version": "1.1.0",
-        "description": "实时显示文章阅读进度的进度条，固定在页面顶部",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "ui",
-        "enabled": true,
-        "installedAt": 1772354579490,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 120
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "view-count": {
-        "id": "view-count",
-        "name": "阅读量统计",
-        "version": "1.0.0",
-        "description": "统计并展示每篇文章的阅读量",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "analytics",
-        "enabled": true,
-        "installedAt": 1772354579627,
-        "revalidation": {
-          "mode": "immediate",
-          "debounceSeconds": 0
-        },
-        "config": {},
-        "assetsCached": true
-      },
-      "code-highlight": {
-        "id": "code-highlight",
-        "name": "代码高亮",
-        "version": "1.0.0",
-        "description": "使用 Highlight.js 为代码块添加语法高亮",
-        "author": {
-          "name": "Blog Plugins Team",
-          "url": "https://github.com/Jason-purse/blog-plugins"
-        },
-        "verified": true,
-        "category": "content",
-        "enabled": true,
-        "installedAt": 1772354619281,
-        "revalidation": {
-          "mode": "debounced",
-          "debounceSeconds": 60
-        },
-        "config": {},
-        "assetsCached": true
-      },
       "theme-editorial": {
         "id": "theme-editorial",
         "name": "Editorial",
@@ -201,10 +41,189 @@
         "verified": true,
         "category": "content",
         "enabled": true,
-        "installedAt": 1772355561290,
+        "installedAt": 1772357600967,
         "revalidation": {
           "mode": "immediate",
           "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "reading-time": {
+        "id": "reading-time",
+        "name": "阅读时间",
+        "version": "1.0.0",
+        "description": "自动计算并显示预计阅读时间",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772357601046,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "dark-mode": {
+        "id": "dark-mode",
+        "name": "深色模式切换",
+        "version": "1.0.0",
+        "description": "为博客添加深色/浅色模式切换按钮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772357601089,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "back-to-top": {
+        "id": "back-to-top",
+        "name": "回到顶部",
+        "version": "1.0.0",
+        "description": "平滑滚动回顶部的浮动按钮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772357601129,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "reading-progress": {
+        "id": "reading-progress",
+        "name": "阅读进度条",
+        "version": "1.1.0",
+        "description": "实时显示文章阅读进度的进度条，固定在页面顶部",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "ui",
+        "enabled": true,
+        "installedAt": 1772357601172,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 120
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "share-buttons": {
+        "id": "share-buttons",
+        "name": "社交分享",
+        "version": "1.0.0",
+        "description": "文章底部添加分享按钮，支持复制链接、Twitter/X、微信等",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "social",
+        "enabled": true,
+        "installedAt": 1772357601212,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "like-button": {
+        "id": "like-button",
+        "name": "点赞按钮",
+        "version": "1.0.0",
+        "description": "文章底部添加点赞按钮，支持 localStorage 存储",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "social",
+        "enabled": true,
+        "installedAt": 1772357601252,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "view-count": {
+        "id": "view-count",
+        "name": "阅读量统计",
+        "version": "1.0.0",
+        "description": "统计并展示每篇文章的阅读量",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "analytics",
+        "enabled": true,
+        "installedAt": 1772357601292,
+        "revalidation": {
+          "mode": "immediate",
+          "debounceSeconds": 0
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "code-highlight": {
+        "id": "code-highlight",
+        "name": "代码高亮",
+        "version": "1.0.0",
+        "description": "使用 Highlight.js 为代码块添加语法高亮",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "content",
+        "enabled": true,
+        "installedAt": 1772357603551,
+        "revalidation": {
+          "mode": "debounced",
+          "debounceSeconds": 60
+        },
+        "config": {},
+        "assetsCached": true
+      },
+      "guestbook": {
+        "id": "guestbook",
+        "name": "留言板",
+        "version": "1.0.0",
+        "description": "让访客留言互动的独立留言板页面",
+        "author": {
+          "name": "Blog Plugins Team",
+          "url": "https://github.com/Jason-purse/blog-plugins"
+        },
+        "verified": true,
+        "category": "page",
+        "enabled": true,
+        "installedAt": 1772357983112,
+        "revalidation": {
+          "mode": "immediate"
         },
         "config": {},
         "assetsCached": true

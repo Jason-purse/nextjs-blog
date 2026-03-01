@@ -1,6 +1,7 @@
 import matter from "gray-matter";
 import readingTime from "reading-time";
 import { storage } from "./storage";
+import { processPost, TransformerMetadata } from "./transformer-pipeline";
 
 export interface PostMeta {
   slug: string;
@@ -12,27 +13,54 @@ export interface PostMeta {
   coverImage?: string;
   readingTime?: string;
   summary?: string;
+  // 扩展元数据（来自 Transformer Pipeline）
+  wordCount?: number;
+  readTimeMinutes?: number;
+  toc?: Array<{ id: string; text: string; level: number }>;
+  codeBlockCount?: number;
+  imageCount?: number;
+  excerpt?: string;
 }
 
 export interface Post extends PostMeta {
   content: string;
+  /** 渲染注入脚本（SEO meta 等） */
+  renderInjections?: string;
 }
 
-function parsePost(slug: string, raw: string): Post {
+async function parsePost(slug: string, raw: string): Promise<Post> {
   const realSlug = slug.replace(/\.mdx$/, "");
   const { data, content } = matter(raw);
+  
+  // 运行 Transformer Pipeline
+  const pipelineResult = await processPost(realSlug, content, data)
+  const meta = pipelineResult.metadata
+  
+  // 兼容旧 reading-time 库
   const stats = readingTime(content);
+  
   return {
     slug: realSlug,
     title: data.title,
     date: data.date,
-    description: data.description || "",
+    description: data.description || meta.excerpt || "",
     tags: data.tags || [],
     category: data.category,
     coverImage: data.coverImage,
     summary: data.summary,
-    content,
+    content: pipelineResult.content,  // 可能已被转换器修改
     readingTime: stats.text,
+    
+    // 扩展元数据
+    wordCount: meta.wordCount,
+    readTimeMinutes: meta.readTimeMinutes,
+    toc: meta.toc,
+    codeBlockCount: meta.codeBlocks?.length,
+    imageCount: meta.images?.length,
+    excerpt: meta.excerpt,
+    
+    // 渲染注入
+    renderInjections: meta._renderInjections?.join('\n')
   };
 }
 
@@ -53,7 +81,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
   const posts = await Promise.all(
     slugs.map(async (slug) => {
       const post = await getPostBySlug(slug);
-      const { content: _, ...meta } = post;
+      const { content: _, renderInjections: __, ...meta } = post;
       return meta;
     })
   );

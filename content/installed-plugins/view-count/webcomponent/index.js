@@ -40,7 +40,7 @@
         const res = await fetch(`/api/views?slug=${encodeURIComponent(slug)}`);
         const data = await res.json();
         const views = data.views || 0;
-        this.innerHTML = `<span class="blog-view-count" style="color:#888;font-size:0.85em;">👁️ ${views} 次阅读</span>`;
+        this.innerHTML = `<span class="blog-view-count" style="color:var(--blog-color-text-muted,#888);font-size:0.85em;">👁️ ${views} 次阅读</span>`;
       } catch (e) {
         this.innerHTML = '';
       }

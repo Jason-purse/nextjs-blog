@@ -1,0 +1,39 @@
+{
+  "id": "guestbook",
+  "name": "留言板",
+  "version": "1.0.0",
+  "icon": "💬",
+  "description": "让访客留言互动的留言板页面",
+  "longDescription": "为博客添加一个独立的留言板页面，访客可以留言，博主可以在后台管理留言。留言实时展示，支持删除管理。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "page",
+  "tags": ["guestbook", "comments", "social", "page"],
+  "verified": true,
+  "formats": {
+    "page": {
+      "route": "/guestbook",
+      "title": "留言板",
+      "nav": { "location": "header", "label": "留言", "order": 10 }
+    },
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-guestbook"
+    },
+    "adminPage": {
+      "entry": "admin/index.js",
+      "element": "blog-guestbook-admin",
+      "nav": { "label": "留言管理", "icon": "💬", "section": "content" }
+    }
+  },
+  "slots": [],
+  "allowedRoutes": ["/guestbook"],
+  "dependencies": { "required": [], "recommended": [] },
+  "config": {
+    "schema": {
+      "title": { "type": "text", "label": "页面标题", "default": "留言板" },
+      "placeholder": { "type": "text", "label": "输入框提示", "default": "留下你的足迹..." },
+      "requireName": { "type": "boolean", "label": "要求填写昵称", "default": true }
+    }
+  },
+  "revalidation": { "mode": "immediate" }
+}

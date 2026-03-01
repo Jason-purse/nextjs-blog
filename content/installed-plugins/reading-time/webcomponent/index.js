@@ -40,7 +40,7 @@
       const minutes = Math.max(1, Math.ceil(words / wpm));
       
       this.innerHTML = `
-        <span class="blog-reading-time" style="display:inline-flex;align-items:center;gap:4px;color:#888;font-size:0.85em;">
+        <span class="blog-reading-time" style="display:inline-flex;align-items:center;gap:4px;color:var(--blog-color-text-muted,#888);font-size:0.85em;">
           <span>⏱</span><span>${prefix} ${minutes} ${unit}</span>
         </span>`;
     }

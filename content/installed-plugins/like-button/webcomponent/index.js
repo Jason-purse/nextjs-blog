@@ -38,11 +38,11 @@
           gap: 6px;
           padding: 8px 16px;
           border-radius: 20px;
-          border: 1px solid #e5e7eb;
-          background: ${hasLiked ? '#fef2f2' : '#fff'};
+          border: 1px solid var(--blog-color-border, #e5e7eb);
+          background: ${hasLiked ? 'var(--blog-color-surface, #fef2f2)' : 'var(--blog-color-surface, #fff)'};
           cursor: ${hasLiked ? 'default' : 'pointer'};
           font-size: 14px;
-          color: ${hasLiked ? '#ef4444' : '#6b7280'};
+          color: ${hasLiked ? 'var(--blog-color-primary, #ef4444)' : 'var(--blog-color-text-muted, #6b7280)'};
           transition: all 0.2s;
         " ${hasLiked ? 'disabled' : ''}>
           <span style="font-size:16px;">${hasLiked ? '❤️' : '🤍'}</span>

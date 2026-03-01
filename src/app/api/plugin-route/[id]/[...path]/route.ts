@@ -54,8 +54,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string; path: string[] }> }
 ) {
   const { id } = await params
-  if (!await isAdmin(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-
+  // POST 为公开操作（留言、投票等），写操作鉴权由插件自身逻辑控制
   const body = await req.json()
   const items = await readJSON(dataPath(id))
   const newItem = { ...body, _id: Date.now(), _createdAt: new Date().toISOString() }

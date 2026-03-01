@@ -3,20 +3,14 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { getPostBySlug, getAllPosts } from "@/lib/blog";
 import { MDXContent } from "@/components/mdx-content";
-
-function countWords(content: string): number {
-  const cn = (content.match(/[\u4e00-\u9fa5]/g) || []).length
-  const en = (content.replace(/[\u4e00-\u9fa5]/g, '').match(/\b\w+\b/g) || []).length
-  return cn + en
-}
-
-// ISR：30秒后重新生成，插件开关 30s 内生效
-export const revalidate = 30;
 import { CommentSection } from "@/components/comment-section";
 import { ViewCount } from "@/components/view-count";
 import { AISummary } from "@/components/ai-summary";
 import { GiscusComments } from "@/components/giscus-comments";
 import { isPluginEnabled } from "@/lib/plugin-settings";
+
+// ISR：30秒后重新生成
+export const revalidate = 30;
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -64,27 +58,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
 
-  // Extract headings for TOC
-  const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-  const headings: { level: number; text: string; id: string }[] = [];
-  let match;
-  while ((match = headingRegex.exec(post.content)) !== null) {
-    const text = match[2].trim();
-    headings.push({
-      level: match[1].length,
-      text,
-      id: text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-    });
-  }
-
-  const wordCount = countWords(post.content)
-  const readTimeMins = Math.max(1, Math.ceil(wordCount / 250))
+  // 从 Transformer Pipeline 获取的元数据
+  const toc = post.toc || []
+  const wordCount = post.wordCount || 0
+  const readTimeMins = post.readTimeMinutes || Math.max(1, Math.ceil(wordCount / 250))
 
   return (
     <div className="min-h-screen">
       <Header />
 
-      {/* Plugin Context：注入文章上下文供插件使用 */}
+      {/* Transformer Pipeline 注入的上下文 */}
       <script dangerouslySetInnerHTML={{ __html: `window.__BLOG_CONTENT_CTX__=${JSON.stringify({
         slug: post.slug,
         title: post.title,
@@ -93,12 +76,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         wordCount,
         readTimeMins,
         publishedAt: post.date || '',
-        toc: headings.map((h, i) => ({
+        toc: toc.map((h, i) => ({
           id: h.id || h.text.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-').replace(/^-|-$/g, '') + '-' + i,
           text: h.text,
           level: h.level
         }))
       })}` }} />
+
+      {/* SEO Meta 注入（来自 pipeline 的 render 阶段） */}
+      {post.renderInjections && (
+        <script dangerouslySetInnerHTML={{ __html: post.renderInjections }} />
+      )}
 
       <main className="mx-auto max-w-5xl px-4 py-12">
         <div className="lg:grid lg:grid-cols-[1fr_220px] lg:gap-12">
@@ -184,14 +172,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </article>
 
           {/* Table of Contents - Desktop */}
-          {headings.length > 0 && (
+          {toc.length > 0 && (
             <aside className="hidden lg:block">
               <div className="sticky top-24">
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   On this page
                 </h3>
                 <nav className="space-y-2">
-                  {headings.map((heading) => (
+                  {toc.map((heading) => (
                     <a
                       key={heading.id}
                       href={`#${heading.id}`}

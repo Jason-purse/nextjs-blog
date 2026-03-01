@@ -9,7 +9,7 @@ class BlogReadingProgress extends HTMLElement {
 
   connectedCallback() {
     const shadow = this.attachShadow({ mode: 'closed' })
-    const color  = this.getAttribute('color')  ?? 'var(--accent, #7C8C6E)'
+    const color  = this.getAttribute('color')  ?? 'var(--blog-color-primary, #3b82f6)'
     const height = this.getAttribute('height') ?? '3'
 
     shadow.innerHTML = `
