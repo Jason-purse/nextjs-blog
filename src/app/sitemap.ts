@@ -3,7 +3,7 @@ import { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts();
-  const baseUrl = "https://zen-blog.example.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nextjs-blog-rose-omega-77.vercel.app";
 
   const postUrls = posts.map((post) => ({
     url: `/blog/${post.slug}`,
