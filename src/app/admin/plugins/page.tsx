@@ -7,14 +7,21 @@ import { useRouter } from 'next/navigation'
 import type { PluginCategory, PluginView, PluginRevalidation, RevalidationMode } from '@/types/plugin'
 
 const CATEGORY_META: Record<PluginCategory, { label: string; icon: string; mutex?: boolean }> = {
-  theme:     { label: '主题',     icon: '🎨', mutex: true },
-  content:   { label: '内容增强', icon: '✍️' },
-  ui:        { label: '界面增强', icon: '🖼️' },
-  social:    { label: '社交互动', icon: '💬' },
-  analytics: { label: '数据分析', icon: '📊' },
-  seo:       { label: 'SEO 优化', icon: '🔍' },
+  // Pipeline 核心类型
+  source:     { label: '数据源',   icon: '📥' },
+  transform:  { label: '转换器',   icon: '🔄' },
+  output:     { label: '输出器',   icon: '📤' },
+  hook:       { label: '钩子',     icon: '🪝' },
+  // 兼容类型
+  theme:      { label: '主题',     icon: '🎨', mutex: true },
+  content:    { label: '内容增强', icon: '✍️' },
+  ui:         { label: '界面增强', icon: '🖼️' },
+  social:     { label: '社交互动', icon: '💬' },
+  analytics:  { label: '数据分析', icon: '📊' },
+  seo:        { label: 'SEO 优化', icon: '🔍' },
+  page:       { label: '页面',     icon: '📄' },
 }
-const CATEGORY_ORDER: PluginCategory[] = ['theme', 'content', 'ui', 'social', 'analytics', 'seo']
+const CATEGORY_ORDER: PluginCategory[] = ['source', 'transform', 'output', 'hook', 'theme', 'content', 'ui', 'social', 'analytics', 'seo']
 
 type ViewMode = 'market' | 'installed'
 
@@ -108,7 +115,7 @@ export default function PluginsPage() {
     if (res.ok) {
       const d = await res.json()
       setPlugins(prev => prev.map(p => p.id === id ? { ...p, enabled } : p))
-      if (d.plugin?.revalidation?.mode === 'debounced') startCountdown(d.plugin.revalidation.debounceSeconds)
+      if (d.plugin?.revalidation?.mode === 'debounced') startCountdown(d.plugin?.revalidation?.debounceSeconds)
     }
     setWorking(null)
   }
@@ -132,14 +139,14 @@ export default function PluginsPage() {
     if (res.ok) {
       // 取保存后的实际模式（edit 优先，否则保留原值）
       const plugin = plugins.find(p => p.id === id)
-      const effectiveMode = edit.mode ?? plugin?.revalidation.mode
-      setPlugins(prev => prev.map(p => p.id === id ? { ...p, revalidation: { ...p.revalidation, ...edit } } : p))
+      const effectiveMode = edit.mode ?? plugin?.revalidation?.mode
+      setPlugins(prev => prev.map(p => p.id === id ? { ...p, revalidation: { mode: 'immediate', ...p.revalidation, ...edit } } : p))
       setEditReval(prev => { const n = { ...prev }; delete n[id]; return n })
       // 立即生效 → 直接重建；延迟生效 → 启动倒计时
       if (effectiveMode === 'immediate') {
         await fetch('/api/admin/revalidate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
       } else if (effectiveMode === 'debounced') {
-        const secs = edit.debounceSeconds ?? plugin?.revalidation.debounceSeconds ?? 30
+        const secs = edit.debounceSeconds ?? plugin?.revalidation?.debounceSeconds ?? 30
         startCountdown(secs)
       }
     }
@@ -150,7 +157,7 @@ export default function PluginsPage() {
   const filtered = plugins.filter(p => {
     const matchView = viewMode === 'market' || p.installed
     const matchCat  = filterCat === 'all' || p.category === filterCat
-    const matchQ    = !query || p.name.includes(query) || p.description.includes(query) || p.tags.some(t => t.includes(query))
+    const matchQ    = !query || p.name.includes(query) || p.description?.includes(query) || p.tags.some(t => t.includes(query))
     return matchView && matchCat && matchQ
   })
 
@@ -414,8 +421,8 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
             <span style={{ fontSize: 11, color: '#6b7280' }}>by {authorName}{p.downloads != null ? ` · ↓${p.downloads}` : ''}</span>
             {/* 生效时间 */}
             {p.installed && (
-              <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: p.revalidation.mode === 'immediate' ? '#eff6ff' : '#fffbeb', color: p.revalidation.mode === 'immediate' ? '#1d4ed8' : '#92400e' }}>
-                {p.revalidation.mode === 'immediate' ? '立即生效' : `${p.revalidation.debounceSeconds}s 后生效`}
+              <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: p.revalidation?.mode === 'immediate' ? '#eff6ff' : '#fffbeb', color: p.revalidation?.mode === 'immediate' ? '#1d4ed8' : '#92400e' }}>
+                {p.revalidation?.mode === 'immediate' ? '立即生效' : `${p.revalidation?.debounceSeconds}s 后生效`}
               </span>
             )}
           </div>
@@ -434,16 +441,16 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
           {p.installed && (
             <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>生效时间：</span>
-              <select value={editing?.mode ?? p.revalidation.mode}
+              <select value={editing?.mode ?? p.revalidation?.mode}
                 onChange={e => onEditReval({ mode: e.target.value as RevalidationMode })}
                 style={{ fontSize: 12, border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', background: 'var(--background)' }}>
                 <option value="immediate">立即生效</option>
                 <option value="debounced">延迟生效</option>
               </select>
-              {(editing?.mode ?? p.revalidation.mode) === 'debounced' && (
+              {(editing?.mode ?? p.revalidation?.mode) === 'debounced' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <input type="number" min={10} max={3600} step={10}
-                    value={editing?.debounceSeconds ?? p.revalidation.debounceSeconds}
+                    value={editing?.debounceSeconds ?? p.revalidation?.debounceSeconds}
                     onChange={e => onEditReval({ debounceSeconds: Number(e.target.value) })}
                     style={{ width: 64, fontSize: 12, border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', background: 'var(--background)' }} />
                   <span style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>秒</span>

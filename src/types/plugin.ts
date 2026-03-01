@@ -1,91 +1,241 @@
-// src/types/plugin.ts
+// ============================================================
+// Plugin Types - Input/Transformer/Output 架构
+// ============================================================
 
-// ── 插件配置 Schema ──────────────────────────────────────────────
+/** 插件类型 */
+export type PluginType = 'source' | 'transform' | 'output' | 'ui' | 'page'
 
-export type ConfigFieldType = 'color' | 'range' | 'select' | 'text' | 'number' | 'toggle'
-
-interface ConfigFieldBase {
-  type: ConfigFieldType
-  label: string
-  cssVar?: string   // 注入为 CSS 变量，如 --rp-color
-  attr?: string     // 注入为 WC attribute
+/** 插件基接口 */
+export interface Plugin {
+  id: string
+  name: string
+  version: string
+  type: PluginType
+  description?: string
+  author?: { name: string; url?: string }
+  tags?: string[]
+  verified?: boolean
+  source?: string // 插件源路径
+  
+  // 格式声明
+  formats?: PluginFormats
+  
+  // 路由和权限
+  allowedRoutes?: string[]
+  permissions?: PluginPermissions
+  
+  // 依赖
+  dependencies?: {
+    required: string[]
+    recommended: string[]
+  }
+  
+  // 配置
+  config?: {
+    schema: Record<string, ConfigField>
+  }
+  
+  // 主题兼容性
+  themeCompatibility?: {
+    optimizedFor?: string[]
+    universal?: boolean
+  }
 }
-interface ColorField    extends ConfigFieldBase { type: 'color';  default: string }
-interface RangeField    extends ConfigFieldBase { type: 'range';  default: number; min: number; max: number; unit?: string }
-interface SelectField   extends ConfigFieldBase { type: 'select'; default: string; options: { value: string; label: string }[] }
-interface TextField     extends ConfigFieldBase { type: 'text';   default: string; placeholder?: string }
-interface NumberField   extends ConfigFieldBase { type: 'number'; default: number; min?: number; max?: number }
-interface ToggleField   extends ConfigFieldBase { type: 'toggle'; default: boolean }
 
-export type ConfigField = ColorField | RangeField | SelectField | TextField | NumberField | ToggleField
+export interface ConfigField {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'text' | 'select' | 'color' | 'range' | 'toggle'
+  label: string
+  min?: number
+  max?: number
+  default?: any
+  required?: boolean
+  options?: { label: string; value: any }[]
+  cssVar?: string  // CSS 变量名
+}
+
+export interface PluginPermissions {
+  publicRead?: boolean
+  publicWrite?: boolean
+  adminWrite?: boolean
+  rateLimitMs?: number
+}
+
+export interface PluginFormats {
+  // Web Component (UI 插件)
+  webcomponent?: {
+    entry: string
+    element: string
+    slots?: string[]
+  }
+  
+  // Source 插件 - 数据源
+  source?: {
+    entry: string
+    init?: string
+  }
+  
+  // Transformer 插件 - 数据转换
+  transform?: {
+    entry: string
+    phase?: 'early' | 'middle' | 'late' | 'render'
+    hooks?: string[]
+  }
+  
+  // Output 插件 - 输出形式
+  output?: {
+    entry: string
+    contentType?: 'html' | 'json' | 'xml' | 'text'
+  }
+  
+  // Page 插件 - 页面
+  page?: {
+    route: string
+    title: string
+    nav?: {
+      location?: 'header' | 'footer' | 'sidebar'
+      label?: string
+      order?: number
+    }
+  }
+  
+  // Admin 页面
+  adminPage?: {
+    entry: string
+    element?: string
+    nav?: {
+      label: string
+      icon?: string
+      section?: string
+    }
+  }
+  
+  // Hook 插件 (兼容旧命名)
+  hook?: {
+    entry: string
+    hooks?: string[]
+  }
+}
+
+// ============================================================
+// Pipeline 类型
+// ============================================================
+
+/** Pipeline 输入 */
+export interface PipelineInput {
+  /** 内容类型 */
+  contentType: 'mdx' | 'json' | 'html' | 'text'
+  /** 原始内容 */
+  content: string
+  /** 元数据 */
+  metadata: Record<string, any>
+  /** 上下文 */
+  context: PipelineContext
+}
+
+/** Pipeline 上下文 */
+export interface PipelineContext {
+  slug?: string
+  route?: string
+  params?: Record<string, string>
+  query?: Record<string, string>
+  locale?: string
+  theme?: string
+  plugins?: Record<string, PluginInstance>
+}
+
+/** Pipeline 输出 */
+export interface PipelineOutput {
+  content: string
+  metadata: Record<string, any>
+  injections: PipelineInjection[]
+}
+
+export interface PipelineInjection {
+  type: 'head' | 'body' | 'script' | 'style' | 'html'
+  content: string
+  priority?: number
+}
+
+/** Pipeline 阶段 */
+export type PipelinePhase = 'source' | 'transform' | 'output'
+
+/** Pipeline 阶段定义 */
+export interface PipelinePhaseConfig {
+  phase: PipelinePhase
+  plugins: PluginInstance[]
+}
+
+/** 插件实例 */
+export interface PluginInstance {
+  id: string
+  plugin: Plugin
+  config?: Record<string, any>
+  enabled?: boolean
+}
+
+/** Transformer 函数签名 */
+export interface TransformerFunc {
+  (input: PipelineInput): Promise<PipelineInput>
+  (input: PipelineInput): PipelineInput
+}
+
+/** Source 函数签名 */
+export interface SourceFunc {
+  (context: PipelineContext): Promise<PipelineInput>
+}
+
+/** Output 函数签名 */
+export interface OutputFunc {
+  (input: PipelineOutput): Promise<PipelineOutput>
+}
 
 export type ConfigSchema = Record<string, ConfigField>
 
-// plugin.json 中的 config 节
-export interface PluginConfigSpec {
-  schema: ConfigSchema
+export type PluginCategory = 'source' | 'transform' | 'output' | 'theme' | 'ui' | 'content' | 'social' | 'analytics' | 'page' | 'seo' | 'hook'
+
+
+export interface PluginView {
+  id: string
+  name: string
+  icon?: string
+  description?: string
+  longDescription?: string
+  author?: string | { name: string; url?: string }
+  tags: string[]
+  source: string
+  category: PluginCategory
+  version: string
+  verified: boolean
+  enabled?: boolean
+  config?: Record<string, any>
+  comingSoon?: boolean
+  downloads?: number
+  installed?: boolean
+  installedAt?: string
+  dependencies?: PluginDependencies
+  revalidation?: PluginRevalidation
 }
 
-export type RevalidationMode = 'immediate' | 'debounced'
+export type RevalidationMode = 'immediate' | 'debounced' | 'delayed' | 'scheduled'
 
 export interface PluginRevalidation {
   mode: RevalidationMode
-  debounceSeconds: number
+  debounceSeconds?: number
+  tags?: string[]
+  path?: string
+  delayMs?: number
+  scheduleCron?: string
 }
 
-// 所有分类，theme 是特殊分类（互斥激活）
-export type PluginCategory = 'theme' | 'content' | 'ui' | 'social' | 'analytics' | 'seo'
-
-export const CATEGORY_META: Record<PluginCategory, { label: string; icon: string; desc: string; mutex?: boolean }> = {
-  theme:     { label: '主题',     icon: '🎨', desc: '博客外观主题，同时只能启用一个', mutex: true },
-  content:   { label: '内容增强', icon: '✍️', desc: '增强文章内容展示体验' },
-  ui:        { label: '界面增强', icon: '🖼️', desc: '优化页面交互与视觉细节' },
-  social:    { label: '社交互动', icon: '💬', desc: '评论、分享、互动功能' },
-  analytics: { label: '数据分析', icon: '📊', desc: '阅读统计与用户行为分析' },
-  seo:       { label: 'SEO 优化', icon: '🔍', desc: '提升搜索引擎收录与排名' },
+export interface PluginDependencies {
+  required?: string[]
+  recommended?: string[]
 }
 
-// 来自 GitHub registry.json 的插件元数据
-export interface RegistryPlugin {
-  id: string
-  name: string
-  category: PluginCategory
-  tags: string[]
-  verified: boolean
-  version: string
-  author: string | { name: string; url?: string }  // 字符串或对象均可
-  downloads?: number            // 可选，registry 可能不提供
-  source: string
-  description: string
-  longDescription?: string      // 详细描述
-  icon?: string                 // emoji 或 SVG 字符串
-  comingSoon?: boolean          // 即将推出标记
-  preview?: string              // 主题专用预览图
-  revalidation: PluginRevalidation
-  allowedRoutes?: string[]
-  dependencies?: { required: string[]; recommended: string[] }
+export interface InstalledPlugin extends PluginView {
+  assetsCached?: boolean
 }
 
-// settings.json 本地已安装记录
-export interface InstalledPlugin {
-  id: string
-  name: string
-  version: string
-  description: string
-  author: string
-  verified: boolean
-  category: PluginCategory
-  enabled: boolean
-  installedAt: number
-  revalidation: PluginRevalidation
-  config: Record<string, unknown>
-  assetsCached?: boolean   // 资源是否已缓存到 blog-content/installed-plugins/{id}/
-}
-
-// API 返回的合并视图
-export interface PluginView extends RegistryPlugin {
-  installed: boolean
-  enabled: boolean
-  installedAt?: number
-  active?: boolean    // 主题专用：是否为当前激活主题
+export interface RegistryPlugin extends PluginView {
+  // Registry-specific fields
 }

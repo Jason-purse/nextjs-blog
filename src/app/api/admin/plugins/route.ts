@@ -49,7 +49,8 @@ function getLocalRegistry(settings: Record<string, unknown>): Record<string, Ins
       reg[id] = {
         id, name: id, version: '1.0.0', description: '', author: '',
         verified: false, category: 'content', enabled: true,
-        installedAt: Date.now(),
+        installedAt: String(Date.now()),
+        tags: [], source: '',
         revalidation: { mode: 'immediate', debounceSeconds: 0 },
         config: {},
       }
@@ -209,7 +210,7 @@ export async function GET(req: NextRequest) {
     ...p,
     installed:    !!local[p.id],
     enabled:      local[p.id]?.enabled ?? false,
-    installedAt:  local[p.id]?.installedAt,
+    installedAt:  String(local[p.id]?.installedAt ?? ''),
     revalidation: local[p.id]?.revalidation ?? p.revalidation,
     assetsCached: local[p.id]?.assetsCached ?? false,
     active: p.category === 'theme' ? activeTheme === p.id : undefined,
@@ -237,8 +238,9 @@ export async function POST(req: NextRequest) {
       local[pid] = {
         id: pid, name: meta.name, version: meta.version, description: meta.description,
         author: meta.author, verified: meta.verified, category: meta.category,
-        enabled: true, installedAt: Date.now(),
-        revalidation: meta.revalidation,
+        enabled: true, installedAt: String(Date.now()),
+        tags: meta.tags || [], source: meta.source || '',
+        revalidation: meta.revalidation ?? { mode: 'immediate' },
         config: {},
         assetsCached: cached,
       } as InstalledPlugin & { assetsCached: boolean }
@@ -272,8 +274,9 @@ export async function POST(req: NextRequest) {
     local[id] = {
       id, name: meta.name, version: meta.version, description: meta.description,
       author: meta.author, verified: meta.verified, category: meta.category,
-      enabled: true, installedAt: Date.now(),
-      revalidation: meta.revalidation,
+      enabled: true, installedAt: String(Date.now()),
+      tags: meta.tags || [], source: meta.source || '',
+      revalidation: meta.revalidation ?? { mode: 'immediate' },
       config: {},
       assetsCached: cached,  // 标记资源是否已缓存
     } as InstalledPlugin & { assetsCached: boolean }
@@ -283,7 +286,7 @@ export async function POST(req: NextRequest) {
       if (!settings.plugins) settings.plugins = {}
       ;(settings.plugins as Record<string, unknown>).activeTheme = id
     }
-    if (meta.revalidation.mode === 'immediate') doRevalidate()
+    if (meta.revalidation?.mode === 'immediate') doRevalidate()
 
   } else {
     // 卸载：先清理缓存资源
@@ -336,9 +339,9 @@ export async function PATCH(req: NextRequest) {
     doRevalidate()
   } else {
     if (enabled !== undefined) plugin.enabled = enabled
-    if (revalidation) plugin.revalidation = { ...plugin.revalidation, ...revalidation }
+    if (revalidation) plugin.revalidation = { mode: 'immediate', ...plugin.revalidation, ...revalidation }
     if (config !== undefined) plugin.config = config
-    if (enabled !== undefined && plugin.revalidation.mode === 'immediate') doRevalidate()
+    if (enabled !== undefined && plugin.revalidation?.mode === 'immediate') doRevalidate()
   }
 
   if (!settings.plugins) settings.plugins = {}

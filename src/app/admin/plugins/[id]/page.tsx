@@ -32,14 +32,22 @@ interface PluginDetail {
   enabled: boolean
 }
 
-const CATEGORY_META: Record<PluginCategory, { label: string; icon: string }> = {
-  theme:     { label: '主题',     icon: '🎨' },
-  content:   { label: '内容增强', icon: '✍️' },
-  ui:        { label: '界面增强', icon: '🖼️' },
-  social:    { label: '社交互动', icon: '💬' },
-  analytics: { label: '数据分析', icon: '📊' },
-  seo:       { label: 'SEO 优化', icon: '🔍' },
-}
+type CategoryKey = 'source' | 'transform' | 'output' | 'theme' | 'content' | 'ui' | 'social' | 'analytics' | 'seo' | 'page' | 'hook'
+const CATEGORY_META: Record<CategoryKey, { label: string; icon: string }> = {
+  // Pipeline 核心类型
+  source:     { label: '数据源',   icon: '📥' },
+  transform:  { label: '转换器',   icon: '🔄' },
+  output:     { label: '输出器',   icon: '📤' },
+  // 兼容类型
+  theme:      { label: '主题',     icon: '🎨' },
+  content:    { label: '内容增强', icon: '✍️' },
+  ui:         { label: '界面增强', icon: '🖼️' },
+  social:     { label: '社交互动', icon: '💬' },
+  analytics:  { label: '数据分析', icon: '📊' },
+  seo:        { label: 'SEO 优化', icon: '🔍' },
+  page:       { label: '页面',     icon: '📄' },
+  hook:       { label: '钩子',     icon: '🪝' },
+} as const
 
 export default function PluginConfigPage() {
   const router = useRouter()
