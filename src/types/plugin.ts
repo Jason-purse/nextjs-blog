@@ -7,34 +7,35 @@ export interface PluginRevalidation {
   debounceSeconds: number
 }
 
-// registry.json 里的插件元数据（来自 GitHub）
+// 所有分类，theme 是特殊分类（互斥激活）
+export type PluginCategory = 'theme' | 'content' | 'ui' | 'social' | 'analytics' | 'seo'
+
+export const CATEGORY_META: Record<PluginCategory, { label: string; icon: string; desc: string; mutex?: boolean }> = {
+  theme:     { label: '主题',     icon: '🎨', desc: '博客外观主题，同时只能启用一个', mutex: true },
+  content:   { label: '内容增强', icon: '✍️', desc: '增强文章内容展示体验' },
+  ui:        { label: '界面增强', icon: '🖼️', desc: '优化页面交互与视觉细节' },
+  social:    { label: '社交互动', icon: '💬', desc: '评论、分享、互动功能' },
+  analytics: { label: '数据分析', icon: '📊', desc: '阅读统计与用户行为分析' },
+  seo:       { label: 'SEO 优化', icon: '🔍', desc: '提升搜索引擎收录与排名' },
+}
+
+// 来自 GitHub registry.json 的插件元数据
 export interface RegistryPlugin {
   id: string
   name: string
   category: PluginCategory
   tags: string[]
-  type: 'plugin'
   verified: boolean
   version: string
   author: string
   downloads: number
   source: string
   description: string
+  preview?: string          // 主题专用预览图
   revalidation: PluginRevalidation
 }
 
-export type PluginCategory = 'content' | 'ui' | 'social' | 'analytics' | 'seo'
-
-export const CATEGORY_LABELS: Record<PluginCategory | 'all', string> = {
-  all:       '全部',
-  content:   '内容增强',
-  ui:        '界面增强',
-  social:    '社交互动',
-  analytics: '数据分析',
-  seo:       'SEO',
-}
-
-// settings.json 里存的本地已安装记录
+// settings.json 本地已安装记录
 export interface InstalledPlugin {
   id: string
   name: string
@@ -45,6 +46,14 @@ export interface InstalledPlugin {
   category: PluginCategory
   enabled: boolean
   installedAt: number
-  revalidation: PluginRevalidation   // 可覆盖 registry 默认值
+  revalidation: PluginRevalidation
   config: Record<string, unknown>
+}
+
+// API 返回的合并视图
+export interface PluginView extends RegistryPlugin {
+  installed: boolean
+  enabled: boolean
+  installedAt?: number
+  active?: boolean    // 主题专用：是否为当前激活主题
 }
