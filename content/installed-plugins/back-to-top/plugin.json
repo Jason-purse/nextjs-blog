@@ -1,0 +1,28 @@
+{
+  "id": "back-to-top",
+  "name": "回到顶部",
+  "version": "1.0.0",
+  "icon": "⬆️",
+  "description": "平滑滚动回顶部的浮动按钮",
+  "longDescription": "当用户向下滚动超过阈值时显示浮动按钮，点击后平滑滚动回页面顶部。支持自定义颜色、大小和触发阈值。",
+  "author": { "name": "Blog Plugins Team", "url": "https://github.com/Jason-purse/blog-plugins" },
+  "category": "ui",
+  "tags": ["scroll", "button", "ux"],
+  "verified": true,
+  "formats": {
+    "webcomponent": {
+      "entry": "webcomponent/index.js",
+      "element": "blog-back-to-top"
+    }
+  },
+  "slots": ["body"],
+  "config": {
+    "schema": {
+      "color": { "type": "color", "label": "按钮颜色", "default": "#3b82f6", "cssVar": "--btt-color" },
+      "size": { "type": "range", "label": "按钮大小", "default": 48, "min": 36, "max": 64, "unit": "px", "cssVar": "--btt-size" },
+      "threshold": { "type": "number", "label": "触发滚动距离(px)", "default": 300 },
+      "position": { "type": "select", "label": "位置", "default": "bottom-right", "options": [{"value":"bottom-right","label":"右下角"},{"value":"bottom-left","label":"左下角"}] }
+    }
+  },
+  "revalidation": { "mode": "debounced", "debounceSeconds": 60 }
+}

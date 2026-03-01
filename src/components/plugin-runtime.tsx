@@ -14,7 +14,7 @@ interface JSPlugin {
   config?: Record<string, unknown>
 }
 
-// 从 /api/admin/plugins 拿到已安装的 JS 插件列表
+// 从 /api/plugins/runtime 拿到已安装的 JS 插件列表
 async function fetchJSPlugins(): Promise<JSPlugin[]> {
   try {
     const res = await fetch('/api/plugins/runtime')
@@ -29,35 +29,33 @@ async function fetchJSPlugins(): Promise<JSPlugin[]> {
 async function loadWC(plugin: JSPlugin): Promise<void> {
   if (customElements.get(plugin.element)) return  // 已注册，跳过
 
-  // 服务端已校验 checksum；客户端通过 /api/registry/asset 代理加载
-  // 不直接 import raw.githubusercontent.com，走代理保证 token 安全
   const url = `/api/registry/asset?path=${plugin.source}/${plugin.wcEntry}`
 
-  const script = document.createElement('script')
-  script.type = 'module'
-  script.src = url
-  document.head.appendChild(script)
-
-  await new Promise<void>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = url
     script.onload = () => resolve()
     script.onerror = () => reject(new Error(`Failed to load plugin: ${plugin.id}`))
+    document.head.appendChild(script)
   })
 }
 
 // 挂载到对应 slot
 function mountToSlot(plugin: JSPlugin): void {
   for (const slotName of plugin.slots) {
+    // "body" slot：直接挂到 document.body，WC 自己负责定位（fixed/absolute）
+    if (slotName === 'body') {
+      if (!document.body.querySelector(plugin.element)) {
+        const el = document.createElement(plugin.element)
+        document.body.appendChild(el)
+      }
+      continue
+    }
+
     const slots = document.querySelectorAll(`[data-blog-slot="${slotName}"]`)
     slots.forEach(slot => {
-      // 避免重复挂载
       if (slot.querySelector(plugin.element)) return
       const el = document.createElement(plugin.element)
-      // 把配置作为 dataset 传给 WC
-      if (plugin.config) {
-        Object.entries(plugin.config).forEach(([k, v]) => {
-          el.setAttribute(k, String(v))
-        })
-      }
       slot.appendChild(el)
     })
   }
