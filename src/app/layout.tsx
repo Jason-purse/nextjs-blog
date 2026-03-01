@@ -3,6 +3,7 @@ import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/goog
 import { ThemeProvider } from "@/components/theme-provider";
 import { PluginLoader } from "@/components/plugin-loader";
 import { PluginRuntime } from "@/components/plugin-runtime";
+import { storage } from "@/lib/storage";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -49,11 +50,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+// 获取已启用插件的配置，注入到 window.__BLOG_PLUGIN_CONFIG__
+async function getPluginConfigs(): Promise<Record<string, Record<string, unknown>>> {
+  try {
+    const raw = await storage.read('settings.json')
+    if (!raw) return {}
+    const settings = JSON.parse(raw)
+    const registry = settings?.plugins?.registry
+    if (!registry) return {}
+    
+    const configs: Record<string, Record<string, unknown>> = {}
+    for (const [pluginId, pluginData] of Object.entries(registry as Record<string, { enabled: boolean; config?: Record<string, unknown> }>)) {
+      if (pluginData.enabled && pluginData.config) {
+        configs[pluginId] = pluginData.config
+      }
+    }
+    return configs
+  } catch {
+    return {}
+  }
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pluginConfigs = await getPluginConfigs()
+  const pluginConfigScript = (
+    <script 
+      dangerouslySetInnerHTML={{ 
+        __html: `window.__BLOG_PLUGIN_CONFIG__ = ${JSON.stringify(pluginConfigs)}` 
+      }} 
+    />
+  )
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -70,6 +101,8 @@ export default function RootLayout({
           {children}
           <div data-blog-slot="after-content" />
         </ThemeProvider>
+        {/* 插件配置注入 */}
+        {pluginConfigScript}
       </body>
     </html>
   );

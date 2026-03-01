@@ -5,14 +5,40 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
-import type { ConfigSchema, ConfigField } from '@/types/plugin'
+import type { ConfigSchema, ConfigField, PluginCategory } from '@/types/plugin'
+
+interface PluginRegistryInfo {
+  id: string
+  name: string
+  icon?: string
+  author?: { name: string; url?: string }
+  description: string
+  longDescription?: string
+  tags: string[]
+  source: string
+  category: PluginCategory
+  version: string
+  verified: boolean
+  comingSoon?: boolean
+}
 
 interface PluginDetail {
-  plugin: { id: string; name: string; source: string; description: string; category: string }
+  plugin: PluginRegistryInfo
   schema: ConfigSchema
   schemaDefaults: Record<string, unknown>
   userConfig: Record<string, unknown>
   mergedConfig: Record<string, unknown>
+  installed: boolean
+  enabled: boolean
+}
+
+const CATEGORY_META: Record<PluginCategory, { label: string; icon: string }> = {
+  theme:     { label: '主题',     icon: '🎨' },
+  content:   { label: '内容增强', icon: '✍️' },
+  ui:        { label: '界面增强', icon: '🖼️' },
+  social:    { label: '社交互动', icon: '💬' },
+  analytics: { label: '数据分析', icon: '📊' },
+  seo:       { label: 'SEO 优化', icon: '🔍' },
 }
 
 export default function PluginConfigPage() {
@@ -25,21 +51,28 @@ export default function PluginConfigPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
+  const [allPlugins, setAllPlugins] = useState<PluginRegistryInfo[]>([])
 
   const load = useCallback(() => {
     setLoading(true)
-    fetch(`/api/admin/plugins/${id}`)
-      .then(r => { if (r.status === 401) { router.push('/admin/login'); return null } return r.json() })
-      .then(d => {
-        if (d) {
-          setDetail(d)
-          setConfig(d.mergedConfig)
-          // 初始注入 CSS 变量到当前页面（预览用）
-          applyVars(d.schema, d.mergedConfig)
+    // 并行获取详情和全部插件列表（用于获取 registry 信息）
+    Promise.all([
+      fetch(`/api/admin/plugins/${id}`).then(r => r.json()),
+      fetch('/api/admin/plugins').then(r => r.json())
+    ])
+      .then(([detailData, allData]) => {
+        if (detailData?.plugin) {
+          setDetail({ ...detailData, installed: detailData.installed ?? false, enabled: detailData.enabled ?? false })
+          setConfig(detailData.mergedConfig)
+          applyVars(detailData.schema, detailData.mergedConfig)
+        }
+        // 保存全部插件信息，用于展示 longDescription 等
+        if (allData?.plugins) {
+          setAllPlugins(allData.plugins)
         }
       })
       .finally(() => setLoading(false))
-  }, [id, router])
+  }, [id])
 
   useEffect(() => { load() }, [load])
 
@@ -84,45 +117,160 @@ export default function PluginConfigPage() {
   if (loading) return <div style={{ padding: 60, color: 'var(--muted-foreground)' }}>加载中…</div>
   if (!detail) return <div style={{ padding: 60, color: '#dc2626' }}>插件不存在</div>
 
-  const { plugin, schema } = detail
+  const { plugin, schema, installed, enabled } = detail
   const schemaEntries = Object.entries(schema)
+  
+  // 从 allPlugins 中找到当前插件的 registry 信息
+  const registryInfo = allPlugins.find(p => p.id === id)
+  const icon = plugin.icon || registryInfo?.icon || CATEGORY_META[plugin.category]?.icon || '🔌'
+  // 处理 author - 可能是字符串或对象
+  const getAuthorName = (author: string | { name: string; url?: string } | undefined): string => {
+    if (!author) return '未知作者'
+    if (typeof author === 'string') return author
+    return author.name || '未知作者'
+  }
+  const getAuthorUrl = (author: string | { name: string; url?: string } | undefined): string | undefined => {
+    if (!author || typeof author === 'string') return undefined
+    return author.url
+  }
+  const authorName = getAuthorName(plugin.author || registryInfo?.author)
+  const authorUrl = getAuthorUrl(plugin.author || registryInfo?.author)
+  const longDescription = plugin.longDescription || registryInfo?.longDescription || ''
+  const tags = plugin.tags || registryInfo?.tags || []
+  const comingSoon = plugin.comingSoon || registryInfo?.comingSoon || false
 
   return (
-    <div style={{ padding: '32px 36px', maxWidth: 800 }}>
-      {/* 标题 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+    <div style={{ padding: '32px 36px', maxWidth: 900 }}>
+      {/* 标题栏 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <Link href="/admin/plugins" style={{ fontSize: 13, color: 'var(--muted-foreground)', textDecoration: 'none' }}>
           ← 插件市场
         </Link>
-        <span style={{ color: 'var(--border)' }}>/</span>
-        <span style={{ fontSize: 14, fontWeight: 500 }}>{plugin.name}</span>
-        <span style={{ fontSize: 11, color: 'var(--muted-foreground)', background: 'var(--secondary)', padding: '2px 8px', borderRadius: 8 }}>
-          配置
-        </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 32, alignItems: 'start' }}>
-        {/* 左：表单 */}
-        <div>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 28 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{plugin.name}</h2>
-            <p style={{ fontSize: 13, color: 'var(--muted-foreground)', marginBottom: 28 }}>{plugin.description}</p>
-
-            {schemaEntries.length === 0 ? (
-              <p style={{ color: 'var(--muted-foreground)', fontSize: 14 }}>该插件暂无可配置项</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                {schemaEntries.map(([key, field]) => (
-                  <ConfigField
-                    key={key}
-                    fieldKey={key}
-                    field={field}
-                    value={config[key] ?? (field as { default: unknown }).default}
-                    onChange={(v) => handleChange(key, v)}
-                  />
-                ))}
-              </div>
+      {/* 插件头部信息 */}
+      <div style={{ display: 'flex', gap: 24, marginBottom: 32, alignItems: 'flex-start' }}>
+        {/* Icon */}
+        <div style={{ 
+          width: 80, 
+          height: 80, 
+          fontSize: 48, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          background: 'var(--secondary)', 
+          borderRadius: 16,
+          flexShrink: 0,
+        }}>
+          {comingSoon ? '🚧' : icon}
+        </div>
+        
+        {/* 名称和信息 */}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{plugin.name}</h1>
+            {comingSoon && (
+              <span style={{ fontSize: 12, background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: 8 }}>
+                即将推出
+              </span>
             )}
+          </div>
+          <div style={{ fontSize: 14, color: 'var(--muted-foreground)', marginBottom: 12 }}>
+            {authorUrl ? (
+              <a href={authorUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--muted-foreground)' }}>
+                {authorName}
+              </a>
+            ) : (
+              <span>{authorName}</span>
+            )}
+            {' · '}
+            <span>v{plugin.version}</span>
+            {' · '}
+            <span>{CATEGORY_META[plugin.category]?.label || plugin.category}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {tags.map(t => (
+              <span key={t} style={{ fontSize: 12, padding: '2px 10px', borderRadius: 12, background: 'var(--secondary)', color: 'var(--muted-foreground)' }}>
+                #{t}
+              </span>
+            ))}
+            {plugin.verified && (
+              <span style={{ fontSize: 12, background: '#dcfce7', color: '#166534', padding: '2px 10px', borderRadius: 12 }}>
+                ✓ 官方认证
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 安装状态和按钮 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+          {installed && (
+            <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 8, background: enabled ? '#dcfce7' : '#f3f4f6', color: enabled ? '#166534' : '#6b7280' }}>
+              {enabled ? '已安装 · 已启用' : '已安装 · 已停用'}
+            </span>
+          )}
+          {!comingSoon && !installed && (
+            <button onClick={async () => {
+              const res = await fetch('/api/admin/plugins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action: 'install' }) })
+              if (res.ok) router.refresh()
+            }} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: 'var(--foreground)', color: 'var(--background)', fontSize: 14, cursor: 'pointer' }}>
+              安装插件
+            </button>
+          )}
+          {comingSoon && (
+            <span style={{ fontSize: 13, color: '#92400e' }}>敬请期待</span>
+          )}
+        </div>
+      </div>
+
+      {/* 关于此插件 */}
+      {longDescription && (
+        <div style={{ marginBottom: 32 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            ──── 关于此插件 ────
+          </h3>
+          <div style={{ 
+            background: 'var(--card)', 
+            border: '1px solid var(--border)', 
+            borderRadius: 12, 
+            padding: 20,
+            whiteSpace: 'pre-wrap',
+            fontSize: 14,
+            lineHeight: 1.7,
+            color: 'var(--foreground)',
+          }}>
+            {longDescription}
+          </div>
+        </div>
+      )}
+
+      {/* 配置区域 */}
+      <div style={{ marginBottom: 32 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          ──── 配置 ────
+        </h3>
+        
+        {!installed ? (
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 40, textAlign: 'center', color: 'var(--muted-foreground)' }}>
+            请先安装插件后再进行配置
+          </div>
+        ) : schemaEntries.length === 0 ? (
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 40, textAlign: 'center', color: 'var(--muted-foreground)' }}>
+            该插件暂无可配置项
+          </div>
+        ) : (
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 28 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {schemaEntries.map(([key, field]) => (
+                <ConfigField
+                  key={key}
+                  fieldKey={key}
+                  field={field}
+                  value={config[key] ?? (field as { default: unknown }).default}
+                  onChange={(v) => handleChange(key, v)}
+                />
+              ))}
+            </div>
 
             {/* 操作按钮 */}
             <div style={{ display: 'flex', gap: 12, marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--border)', alignItems: 'center' }}>
@@ -141,22 +289,25 @@ export default function PluginConfigPage() {
               )}
             </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* 右：说明卡片 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>💡 实时预览</div>
-            <p style={{ fontSize: 12, color: 'var(--muted-foreground)', lineHeight: 1.6 }}>
-              修改配置项时，页面效果即时更新（本地 CSS 变量注入）。
-              点击「保存配置」后，变更会写入存储并触发页面重建。
-            </p>
-          </div>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>🔧 配置原理</div>
-            <p style={{ fontSize: 12, color: 'var(--muted-foreground)', lineHeight: 1.6 }}>
-              配置值以 CSS 变量形式注入，插件通过 <code style={{ fontSize: 11, background: 'var(--secondary)', padding: '1px 4px', borderRadius: 3 }}>var()</code> 引用，双方完全解耦。
-            </p>
+      {/* 开发者信息 */}
+      <div>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          ──── 开发者信息 ────
+        </h3>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>如何在插件中使用配置</div>
+          <div style={{ fontSize: 13, color: 'var(--muted-foreground)', lineHeight: 1.8 }}>
+            <div style={{ marginBottom: 8 }}>
+              <code style={{ fontSize: 12, background: 'var(--secondary)', padding: '2px 6px', borderRadius: 4 }}>CSS 变量</code>：
+              <code style={{ fontSize: 12, background: 'var(--secondary)', padding: '2px 6px', borderRadius: 4, marginLeft: 8 }}>var(--your-css-var)</code>
+            </div>
+            <div>
+              <code style={{ fontSize: 12, background: 'var(--secondary)', padding: '2px 6px', borderRadius: 4 }}>JS 访问</code>：
+              <code style={{ fontSize: 12, background: 'var(--secondary)', padding: '2px 6px', borderRadius: 4, marginLeft: 8 }}>window.__BLOG_PLUGIN_CONFIG__['{id}']</code>
+            </div>
           </div>
         </div>
       </div>

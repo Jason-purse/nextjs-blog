@@ -40,11 +40,24 @@ export async function GET(
 
   const { id } = await params
 
-  // 1. 读 registry.json 找插件元数据（含 source 路径）
+  // 1. 读 registry.json 找插件元数据（含 source 路径和完整信息）
   const regRaw = await fetchFileContent('registry.json')
   if (!regRaw) return NextResponse.json({ error: 'registry 读取失败' }, { status: 502 })
   const registry = JSON.parse(regRaw)
-  const meta = (registry.plugins as { id: string; source: string }[]).find(p => p.id === id)
+  const meta = (registry.plugins as { 
+    id: string; 
+    source: string; 
+    name?: string; 
+    icon?: string; 
+    author?: { name: string; url?: string }; 
+    description?: string; 
+    longDescription?: string; 
+    tags?: string[]; 
+    category?: string; 
+    version?: string; 
+    verified?: boolean;
+    comingSoon?: boolean;
+  }[]).find(p => p.id === id)
   if (!meta) return NextResponse.json({ error: '插件不存在' }, { status: 404 })
 
   // 2. 读 plugin.json 获取 config schema
@@ -60,21 +73,46 @@ export async function GET(
     )
   }
 
-  // 3. 读 settings.json 获取用户已保存的 config
+  // 3. 读 settings.json 获取用户已保存的 config 和启用状态
   let userConfig: Record<string, unknown> = {}
+  let installed = false
+  let enabled = false
   try {
     const raw = await storage.read('settings.json')
     if (raw) {
       const settings = JSON.parse(raw)
-      userConfig = (settings?.plugins?.registry?.[id]?.config as Record<string, unknown>) ?? {}
+      const pluginSettings = settings?.plugins?.registry?.[id]
+      if (pluginSettings) {
+        userConfig = (pluginSettings.config as Record<string, unknown>) ?? {}
+        installed = true
+        enabled = pluginSettings.enabled ?? false
+      }
     }
   } catch {}
 
   // 4. 合并：schema 默认值 + 用户覆盖
   const mergedConfig = { ...schemaDefaults, ...userConfig }
 
+  // 5. 构建完整的 plugin 对象（包含 registry 元数据）
+  const plugin = {
+    id: meta.id,
+    name: meta.name || id,
+    icon: meta.icon,
+    author: meta.author,
+    description: meta.description || '',
+    longDescription: meta.longDescription,
+    tags: meta.tags || [],
+    source: meta.source,
+    category: meta.category || 'ui',
+    version: meta.version || '1.0.0',
+    verified: meta.verified ?? false,
+    comingSoon: meta.comingSoon,
+    installed,
+    enabled,
+  }
+
   return NextResponse.json({
-    plugin: meta,
+    plugin,
     schema,
     schemaDefaults,
     userConfig,

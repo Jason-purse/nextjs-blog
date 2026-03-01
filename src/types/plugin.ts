@@ -57,7 +57,11 @@ export interface RegistryPlugin {
   downloads: number
   source: string
   description: string
-  preview?: string          // 主题专用预览图
+  longDescription?: string      // 详细描述（markdown）
+  icon?: string                 // emoji 或 SVG 字符串
+  authorInfo?: { name: string; url?: string }  // 作者信息
+  comingSoon?: boolean          // 即将推出标记
+  preview?: string              // 主题专用预览图
   revalidation: PluginRevalidation
 }
 

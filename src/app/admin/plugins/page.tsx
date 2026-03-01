@@ -331,21 +331,72 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
   onInstall(): void; onUninstall(): void; onToggle(): void
   onEditReval(patch: Partial<PluginRevalidation>): void; onSaveReval(): void
 }) {
+  const router = useRouter()
+  // icon: 使用插件的 icon 字段，或 fallback 到分类 icon
+  const icon = (p as unknown as { icon?: string }).icon || CATEGORY_META[p.category]?.icon || '🔌'
+  // 作者信息
+  const authorInfo = (p as unknown as { authorInfo?: { name: string } }).authorInfo
+  const authorName = authorInfo?.name || p.author
+  // 即将推出标记
+  const comingSoon = (p as unknown as { comingSoon?: boolean }).comingSoon
+
+  // 点击卡片（非按钮区域）跳转到详情页
+  function handleCardClick(e: React.MouseEvent) {
+    const target = e.target as HTMLElement
+    // 如果点击的是按钮或链接，不跳转
+    if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+      return
+    }
+    router.push(`/admin/plugins/${p.id}`)
+  }
+
   return (
-    <div style={{ border: `1px solid ${p.installed && p.enabled ? '#d1fae5' : 'var(--border)'}`, borderRadius: 12, background: p.installed && p.enabled ? '#f0fdf4' : 'var(--card)', padding: '16px 20px' }}>
+    <div 
+      onClick={handleCardClick}
+      style={{ 
+        border: `1px solid ${p.installed && p.enabled ? '#d1fae5' : 'var(--border)'}`, 
+        borderRadius: 12, 
+        background: p.installed && p.enabled ? '#f0fdf4' : 'var(--card)', 
+        padding: '16px 20px',
+        cursor: comingSoon ? 'default' : 'pointer',
+        opacity: comingSoon ? 0.8 : 1,
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        {/* 左：信息 */}
+        {/* 左：Icon + 信息 */}
+        <div style={{ 
+          fontSize: comingSoon ? 28 : 36, 
+          width: comingSoon ? 40 : 56, 
+          height: comingSoon ? 40 : 56,
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          background: 'var(--secondary)', 
+          borderRadius: 10,
+          flexShrink: 0,
+        }}>
+          {icon}
+        </div>
+        
+        {/* 中间：信息 */}
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <span style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</span>
+            {comingSoon && (
+              <span style={{ fontSize: 11, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 8 }}>
+                即将推出
+              </span>
+            )}
             <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>v{p.version}</span>
             {p.verified && <span style={{ fontSize: 11, background: '#dcfce7', color: '#166534', padding: '1px 6px', borderRadius: 8 }}>✓ 官方</span>}
             {!p.verified && <span style={{ fontSize: 11, background: '#fff7ed', color: '#9a3412', padding: '1px 6px', borderRadius: 8 }}>社区</span>}
-            <span style={{ fontSize: 11, color: '#6b7280' }}>by {p.author} · ↓{p.downloads}</span>
+            <span style={{ fontSize: 11, color: '#6b7280' }}>by {authorName} · ↓{p.downloads}</span>
             {/* 生效时间 */}
-            <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: p.revalidation.mode === 'immediate' ? '#eff6ff' : '#fffbeb', color: p.revalidation.mode === 'immediate' ? '#1d4ed8' : '#92400e' }}>
-              {p.revalidation.mode === 'immediate' ? '立即生效' : `${p.revalidation.debounceSeconds}s 后生效`}
-            </span>
+            {p.installed && (
+              <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: p.revalidation.mode === 'immediate' ? '#eff6ff' : '#fffbeb', color: p.revalidation.mode === 'immediate' ? '#1d4ed8' : '#92400e' }}>
+                {p.revalidation.mode === 'immediate' ? '立即生效' : `${p.revalidation.debounceSeconds}s 后生效`}
+              </span>
+            )}
           </div>
           <p style={{ fontSize: 13, color: 'var(--muted-foreground)', margin: '0 0 6px' }}>{p.description}</p>
           {/* tags */}
@@ -381,22 +432,26 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
 
         {/* 右：操作 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          {!p.installed ? (
-            <button onClick={onInstall} disabled={working}
+          {comingSoon ? (
+            <span style={{ fontSize: 12, color: '#92400e', background: '#fef3c7', padding: '6px 12px', borderRadius: 8 }}>
+              敬请期待
+            </span>
+          ) : !p.installed ? (
+            <button onClick={(e) => { e.stopPropagation(); onInstall(); }} disabled={working}
               style={{ padding: '7px 18px', borderRadius: 8, border: 'none', background: 'var(--foreground)', color: 'var(--background)', fontSize: 13, cursor: working ? 'wait' : 'pointer', opacity: working ? 0.6 : 1 }}>
               {working ? '…' : '安装'}
             </button>
           ) : (
             <>
               {/* Toggle */}
-              <button onClick={onToggle} disabled={working} title={p.enabled ? '停用' : '启用'}
+              <button onClick={(e) => { e.stopPropagation(); onToggle(); }} disabled={working} title={p.enabled ? '停用' : '启用'}
                 style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: p.enabled ? '#22c55e' : '#d1d5db', position: 'relative', transition: 'background 0.2s', opacity: working ? 0.5 : 1 }}>
                 <span style={{ position: 'absolute', top: 2, left: p.enabled ? 22 : 2, width: 20, height: 20, borderRadius: 10, background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
               </button>
               <span style={{ fontSize: 12, color: 'var(--muted-foreground)', minWidth: 28 }}>{p.enabled ? '启用' : '停用'}</span>
-              <a href={`/admin/plugins/${p.id}`}
+              <a href={`/admin/plugins/${p.id}`} onClick={e => e.stopPropagation()}
                 style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)', textDecoration: 'none' }}>配置</a>
-              <button onClick={onUninstall} disabled={working}
+              <button onClick={(e) => { e.stopPropagation(); onUninstall(); }} disabled={working}
                 style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid #fca5a5', background: 'transparent', color: '#dc2626', cursor: 'pointer' }}>卸载</button>
             </>
           )}
