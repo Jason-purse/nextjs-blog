@@ -1,5 +1,5 @@
 // ============================================================
-// Blog Library - 使用旧版兼容逻辑 (临时修复)
+// Blog Library - 使用 Pipeline 架构 (兼容版)
 // ============================================================
 
 import matter from "gray-matter";
@@ -18,6 +18,7 @@ export interface PostMeta {
   author?: string;
   readingTime?: string;
   summary?: string;
+  // 扩展元数据
   wordCount?: number;
   readTimeMinutes?: number;
   toc?: Array<{ id: string; text: string; level: number }>;
@@ -118,3 +119,64 @@ export async function getCategoryPostCount(category: string): Promise<number> {
   const posts = await getAllPosts();
   return posts.filter((p) => p.category === category).length;
 }
+
+// ============================================================
+// 新 Pipeline API (实验性)
+// 暂时注释，等 Pipeline 完善后再启用
+// ============================================================
+
+/*
+import { createPipeline, LocalFileSource, MarkdownParser, ReadingTimeTransformer, TocTransformer, ExcerptTransformer } from "./pipeline";
+
+let pipelineInstance: ReturnType<typeof createPipeline> | null = null;
+
+function getPipeline() {
+  if (!pipelineInstance) {
+    pipelineInstance = createPipeline({
+      sources: [new LocalFileSource({ dir: './content/posts', extensions: ['.md', '.mdx'] })],
+      parsers: [new MarkdownParser()],
+      transformers: [
+        new ReadingTimeTransformer(),
+        new TocTransformer(),
+        new ExcerptTransformer()
+      ],
+      emitters: [],
+      hooks: []
+    });
+  }
+  return pipelineInstance;
+}
+
+export async function getAllPostsViaPipeline() {
+  const pipeline = getPipeline();
+  const nodes = await pipeline.run();
+  return nodes.map(node => ({
+    slug: node.slug,
+    title: node.frontmatter.title,
+    date: node.frontmatter.date,
+    tags: node.frontmatter.tags || [],
+    category: node.frontmatter.category as string | undefined,
+    readingTime: node.readingTime,
+    toc: node.toc,
+    excerpt: node.excerpt
+  }));
+}
+
+export async function getPostBySlugViaPipeline(slug: string) {
+  const pipeline = getPipeline();
+  const nodes = await pipeline.run();
+  const node = nodes.find(n => n.slug === slug);
+  if (!node) return null;
+  return {
+    slug: node.slug,
+    title: node.frontmatter.title,
+    date: node.frontmatter.date,
+    content: node.body,
+    tags: node.frontmatter.tags || [],
+    category: node.frontmatter.category as string | undefined,
+    readingTime: node.readingTime,
+    toc: node.toc,
+    excerpt: node.excerpt
+  };
+}
+*/
