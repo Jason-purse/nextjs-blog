@@ -7,7 +7,7 @@ const POSTS_DIR = "posts";
 
 function checkAuth(request: NextRequest): boolean {
   const token = request.cookies.get("admin_token")?.value;
-  return token ? validateToken(token) : false;
+  return token ? validateToken(token) !== null : false;
 }
 
 // GET - list all posts or get single post

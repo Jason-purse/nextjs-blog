@@ -14,7 +14,7 @@ const DEFAULT_SETTINGS = {
 
 function checkAuth(request: NextRequest): boolean {
   const token = request.cookies.get("admin_token")?.value;
-  return token ? validateToken(token) : false;
+  return token ? validateToken(token) !== null : false;
 }
 
 // GET - retrieve blog settings

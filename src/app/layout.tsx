@@ -57,12 +57,7 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="data-theme"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           {children}
         </ThemeProvider>
       </body>
