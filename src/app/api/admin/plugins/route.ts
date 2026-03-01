@@ -12,6 +12,8 @@ const SETTINGS_FILE    = 'settings.json'
 const PLUGINS_REPO     = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
 const PLUGINS_BRANCH   = process.env.GITHUB_THEMES_BRANCH ?? 'main'
 const GITHUB_TOKEN     = process.env.GITHUB_TOKEN
+// 本地开发模式：设置此变量指向本地 server，上线时删除即可无缝切回 GitHub
+const LOCAL_REGISTRY_URL = process.env.PLUGIN_REGISTRY_URL  // e.g. http://localhost:3005
 
 const GH_HEADERS = {
   Accept: 'application/vnd.github.v3+json',
@@ -63,20 +65,35 @@ function getActiveTheme(settings: Record<string, unknown>): string {
 }
 
 async function fetchPluginsRegistry(): Promise<{ plugins: RegistryPlugin[] }> {
-  const res = await fetch(
-    `https://api.github.com/repos/${PLUGINS_REPO}/contents/registry.json?ref=${PLUGINS_BRANCH}`,
-    { headers: GH_HEADERS, next: { revalidate: 300 } }
-  )
-  if (!res.ok) return { plugins: [] }
-  const data = await res.json()
-  return JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8'))
+  try {
+    if (LOCAL_REGISTRY_URL) {
+      // 本地模式：直接读文件系统，绕过代理
+      const { readFile } = await import('fs/promises')
+      const raw = await readFile(`${LOCAL_REGISTRY_URL}/registry.json`, 'utf-8')
+      return JSON.parse(raw)
+    }
+    // GitHub 模式
+    const res = await fetch(
+      `https://api.github.com/repos/${PLUGINS_REPO}/contents/registry.json?ref=${PLUGINS_BRANCH}`,
+      { headers: GH_HEADERS, next: { revalidate: 300 } }
+    )
+    if (!res.ok) return { plugins: [] }
+    const data = await res.json()
+    return JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8'))
+  } catch { return { plugins: [] } }
 }
 
 // 从 blog-plugins repo 下载单个文件内容（raw string）
-async function downloadPluginFile(path: string): Promise<string | null> {
+async function downloadPluginFile(filePath: string): Promise<string | null> {
   try {
+    if (LOCAL_REGISTRY_URL) {
+      // 本地模式：直接读文件系统
+      const { readFile } = await import('fs/promises')
+      return await readFile(`${LOCAL_REGISTRY_URL}/${filePath}`, 'utf-8')
+    }
+    // GitHub 模式
     const res = await fetch(
-      `https://api.github.com/repos/${PLUGINS_REPO}/contents/${path}?ref=${PLUGINS_BRANCH}`,
+      `https://api.github.com/repos/${PLUGINS_REPO}/contents/${filePath}?ref=${PLUGINS_BRANCH}`,
       { headers: GH_HEADERS }
     )
     if (!res.ok) return null

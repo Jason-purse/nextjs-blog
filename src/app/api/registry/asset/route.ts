@@ -9,6 +9,7 @@ import { storage } from '@/lib/storage'
 const TOKEN  = process.env.GITHUB_TOKEN
 const REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
 const BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
+const LOCAL_REGISTRY_URL = process.env.PLUGIN_REGISTRY_URL
 
 // 从路径推断插件 id 和相对路径
 // 例：plugins/ui/reading-progress/webcomponent/index.js
@@ -46,7 +47,20 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 2. Fallback：从 blog-plugins 拉取
+  // 2a. 本地模式 fallback：直接读文件系统，绕过代理
+  if (LOCAL_REGISTRY_URL) {
+    try {
+      const { readFile } = await import('fs/promises')
+      const content = await readFile(`${LOCAL_REGISTRY_URL}/${path}`, 'utf-8')
+      return new NextResponse(content, {
+        headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=60', 'X-Asset-Source': 'local' }
+      })
+    } catch {
+      return NextResponse.json({ error: 'not found' }, { status: 404 })
+    }
+  }
+
+  // 2b. GitHub 模式 fallback
   const res = await fetch(
     `https://api.github.com/repos/${REPO}/contents/${path}?ref=${BRANCH}`,
     {
@@ -63,3 +77,4 @@ export async function GET(req: NextRequest) {
     headers: { 'Content-Type': ct, 'Cache-Control': 'public, max-age=300', 'X-Asset-Source': 'origin' }
   })
 }
+
