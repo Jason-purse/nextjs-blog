@@ -1,5 +1,139 @@
 @import "tailwindcss";
 
+/* ============================================================
+   多主题系统：4 套独立主题，通过 data-theme 属性切换
+   Editorial（默认）/ Minimal / Tech / Warm
+   ============================================================ */
+
+/* --- Editorial（文艺出版风，默认） --- */
+:root,
+[data-theme="editorial"] {
+  --background: #F7F4EF;
+  --foreground: #1A1A18;
+  --muted: #7C8C6E;
+  --muted-foreground: #5a6351;
+  --border: #D8D4CC;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A18;
+  --primary: #1A1A18;
+  --primary-foreground: #F7F4EF;
+  --secondary: #EDE8E0;
+  --secondary-foreground: #1A1A18;
+  --accent: #7C8C6E;
+  --accent-foreground: #FFFFFF;
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 6px;
+}
+
+/* --- Minimal（极简苹果风：纯白、无衬线、大留白） --- */
+[data-theme="minimal"] {
+  --background: #FFFFFF;
+  --foreground: #111111;
+  --muted: #888888;
+  --muted-foreground: #666666;
+  --border: #E8E8E8;
+  --card: #FAFAFA;
+  --card-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F5F5;
+  --secondary-foreground: #111111;
+  --accent: #0066FF;
+  --accent-foreground: #FFFFFF;
+  --font-heading: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --radius: 12px;
+}
+
+[data-theme="minimal"] body {
+  letter-spacing: -0.01em;
+  line-height: 1.65;
+}
+
+[data-theme="minimal"] h1,
+[data-theme="minimal"] h2,
+[data-theme="minimal"] h3 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* --- Tech（极客终端风：深色背景、绿色高亮、等宽字体） --- */
+[data-theme="tech"] {
+  --background: #0D1117;
+  --foreground: #E6EDF3;
+  --muted: #30363D;
+  --muted-foreground: #8B949E;
+  --border: #21262D;
+  --card: #161B22;
+  --card-foreground: #E6EDF3;
+  --primary: #58A6FF;
+  --primary-foreground: #0D1117;
+  --secondary: #21262D;
+  --secondary-foreground: #E6EDF3;
+  --accent: #3FB950;   /* GitHub Actions 绿 */
+  --accent-foreground: #0D1117;
+  --font-heading: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-body: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 4px;
+}
+
+[data-theme="tech"] body {
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+[data-theme="tech"] h1::before { content: "# "; color: var(--accent); }
+[data-theme="tech"] h2::before { content: "## "; color: var(--accent); }
+[data-theme="tech"] h3::before { content: "### "; color: var(--accent); }
+
+[data-theme="tech"] a {
+  color: var(--primary);
+  text-decoration: none;
+}
+[data-theme="tech"] a:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+/* --- Warm（温馨咖啡馆风：暖橙色调、圆润、咖啡色） --- */
+[data-theme="warm"] {
+  --background: #FDF6EC;
+  --foreground: #3D2B1F;
+  --muted: #C49A6C;
+  --muted-foreground: #8B6347;
+  --border: #E8D5B7;
+  --card: #FFFAF3;
+  --card-foreground: #3D2B1F;
+  --primary: #8B4513;    /* 深咖啡色 */
+  --primary-foreground: #FDF6EC;
+  --secondary: #F5E6CE;
+  --secondary-foreground: #3D2B1F;
+  --accent: #D4872B;     /* 暖橙色 */
+  --accent-foreground: #FFFFFF;
+  --font-heading: 'Playfair Display', 'Georgia', serif;
+  --font-body: 'Lora', 'Georgia', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 16px;
+}
+
+[data-theme="warm"] body {
+  line-height: 1.85;
+}
+
+[data-theme="warm"] .prose blockquote {
+  background: var(--secondary);
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+}
+
+/* ============================================================
+   原有 Editorial 主题变量（保持向后兼容）
+   ============================================================ */
+
 :root {
   /* Editorial Color Palette */
   --background: #F7F4EF;

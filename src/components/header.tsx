@@ -1,106 +1,126 @@
 "use client";
 
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useTheme } from "@/components/theme-provider";
+import { themes, type ThemeMode } from "@/lib/themes";
+import { useEffect, useState, useRef } from "react";
+
+const THEME_ICONS: Record<ThemeMode, string> = {
+  editorial: "✒️",
+  minimal: "◻️",
+  tech: "💻",
+  warm: "☕",
+};
 
 export function Header() {
   const [mounted, setMounted] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // 点击外部关闭下拉
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const currentTheme = themes.find((t) => t.value === theme);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md transition-colors duration-300">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
         <Link
           href="/"
-          className="font-serif text-xl font-semibold tracking-tight"
+          className="font-heading text-xl font-semibold tracking-tight text-[var(--foreground)]"
         >
           AI Blog
         </Link>
 
         <nav className="flex items-center gap-6">
-          <Link
-            href="/blog"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href="/blog" className="text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
             Blog
           </Link>
-          <Link
-            href="/archives"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href="/archives" className="text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
             Archives
           </Link>
-          <Link
-            href="/about"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href="/about" className="text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
             About
           </Link>
-          <Link
-            href="/categories"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href="/categories" className="text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
             Categories
           </Link>
-          <Link
-            href="/search"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+          <Link href="/search" className="text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]">
             Search
           </Link>
 
+          {/* 主题切换下拉 */}
           {mounted && (
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--secondary)] px-3 py-1.5 text-sm text-[var(--foreground)] transition-all hover:border-[var(--accent)] hover:bg-[var(--secondary)]"
+                aria-label="切换主题"
+                title="切换主题"
+              >
+                <span className="text-base">{THEME_ICONS[theme]}</span>
+                <span className="hidden sm:inline text-xs font-medium">
+                  {currentTheme?.label ?? "Theme"}
+                </span>
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  className={`h-3 w-3 text-[var(--muted-foreground)] transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute right-0 top-10 z-50 w-44 rounded-xl border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-lg">
+                  <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+                    主题风格
+                  </p>
+                  {themes.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => {
+                        setTheme(t.value);
+                        setDropdownOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+                        theme === t.value
+                          ? "bg-[var(--accent)] text-[var(--accent-foreground)] font-medium"
+                          : "text-[var(--foreground)] hover:bg-[var(--secondary)]"
+                      }`}
+                    >
+                      <span className="text-base">{t.icon}</span>
+                      <div className="text-left">
+                        <div className="font-medium">{t.label}</div>
+                        <div className="text-xs opacity-70">{THEME_DESCRIPTIONS[t.value]}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               )}
-            </button>
+            </div>
           )}
         </nav>
       </div>
     </header>
   );
 }
+
+const THEME_DESCRIPTIONS: Record<ThemeMode, string> = {
+  editorial: "文艺出版风",
+  minimal: "极简苹果风",
+  tech: "极客终端风",
+  warm: "温馨咖啡馆",
+};
