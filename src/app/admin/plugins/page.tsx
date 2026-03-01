@@ -332,13 +332,10 @@ function PluginRow({ plugin: p, working, editing, onInstall, onUninstall, onTogg
   onEditReval(patch: Partial<PluginRevalidation>): void; onSaveReval(): void
 }) {
   const router = useRouter()
-  // icon: 使用插件的 icon 字段，或 fallback 到分类 icon
-  const icon = (p as unknown as { icon?: string }).icon || CATEGORY_META[p.category]?.icon || '🔌'
-  // 作者信息
-  const authorInfo = (p as unknown as { authorInfo?: { name: string } }).authorInfo
-  const authorName = authorInfo?.name || p.author
-  // 即将推出标记
-  const comingSoon = (p as unknown as { comingSoon?: boolean }).comingSoon
+  // icon / authorInfo / comingSoon 已在 PluginView extends RegistryPlugin 中定义
+  const icon = p.icon || CATEGORY_META[p.category]?.icon || '🔌'
+  const authorName = p.authorInfo?.name || p.author
+  const comingSoon = p.comingSoon ?? false
 
   // 点击卡片（非按钮区域）跳转到详情页
   function handleCardClick(e: React.MouseEvent) {

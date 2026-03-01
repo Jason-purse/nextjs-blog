@@ -77,17 +77,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const pluginConfigs = await getPluginConfigs()
-  const pluginConfigScript = (
-    <script 
-      dangerouslySetInnerHTML={{ 
-        __html: `window.__BLOG_PLUGIN_CONFIG__ = ${JSON.stringify(pluginConfigs)}` 
-      }} 
-    />
-  )
+  // 防 XSS：转义 </script> 防止提前关闭 script 标签
+  const configJson = JSON.stringify(pluginConfigs).replace(/<\/script>/gi, '<\\/script>')
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* 插件配置优先注入：WC connectedCallback 读��时已存在 */}
+        <script dangerouslySetInnerHTML={{ __html: `window.__BLOG_PLUGIN_CONFIG__ = ${configJson}` }} />
         <PluginLoader />
       </head>
       <body
@@ -101,8 +98,6 @@ export default async function RootLayout({
           {children}
           <div data-blog-slot="after-content" />
         </ThemeProvider>
-        {/* 插件配置注入 */}
-        {pluginConfigScript}
       </body>
     </html>
   );
