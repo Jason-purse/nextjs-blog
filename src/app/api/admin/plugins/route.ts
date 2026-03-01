@@ -53,7 +53,7 @@ function getActiveTheme(settings: Record<string, unknown>): string {
 }
 
 async function fetchRegistry(): Promise<{ plugins: RegistryPlugin[] }> {
-  const repo   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-themes'
+  const repo   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-plugins'
   const branch = process.env.GITHUB_THEMES_BRANCH ?? 'main'
   const token  = process.env.GITHUB_TOKEN
   const res = await fetch(

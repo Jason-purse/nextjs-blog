@@ -2,11 +2,11 @@
 // ============================================================
 // Plugin / Theme 注册表加载器
 // 统一通过 GitHub API 加载，dev/prod 同一路径
-// PAT → Jason-purse/blog-themes → registry.json + 各插件文件
+// PAT → Jason-purse/blog-plugins → registry.json + 各插件文件
 // ============================================================
 
 const REGISTRY_TOKEN  = process.env.GITHUB_TOKEN          // 复用同一个 PAT
-const REGISTRY_REPO   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-themes'
+const REGISTRY_REPO   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-plugins'
 const REGISTRY_BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
 
 const BASE_URL = `https://api.github.com/repos/${REGISTRY_REPO}/contents`

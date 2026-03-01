@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server'
 import { storage } from '@/lib/storage'
 
-const REGISTRY_REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-themes'
+const REGISTRY_REPO   = process.env.GITHUB_THEMES_REPO   ?? 'Jason-purse/blog-plugins'
 const REGISTRY_BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
 const TOKEN           = process.env.GITHUB_TOKEN
 

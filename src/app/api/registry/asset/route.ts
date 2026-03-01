@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const TOKEN  = process.env.GITHUB_TOKEN
-const REPO   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-themes'
+const REPO   = process.env.GITHUB_THEMES_REPO ?? 'Jason-purse/blog-plugins'
 const BRANCH = process.env.GITHUB_THEMES_BRANCH ?? 'main'
 
 export async function GET(req: NextRequest) {
