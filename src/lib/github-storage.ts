@@ -37,6 +37,13 @@ export async function githubRead(
     return null;
   }
 
+  // 速率限制（403/429）：不 throw，优雅降级返回 null
+  if (response.status === 403 || response.status === 429) {
+    const resetAt = response.headers.get('x-ratelimit-reset')
+    console.warn(`[GitHub] Rate limit exceeded. Resets at: ${resetAt ? new Date(Number(resetAt)*1000).toISOString() : 'unknown'}`)
+    return null;
+  }
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`GitHub API error: ${response.status} - ${error}`);
@@ -146,6 +153,12 @@ export async function githubList(
   const response = await fetch(url, { headers });
 
   if (response.status === 404) {
+    return [];
+  }
+
+  if (response.status === 403 || response.status === 429) {
+    const resetAt = response.headers.get('x-ratelimit-reset')
+    console.warn(`[GitHub] Rate limit exceeded. Resets at: ${resetAt ? new Date(Number(resetAt)*1000).toISOString() : 'unknown'}`)
     return [];
   }
 
