@@ -10,6 +10,10 @@ interface Settings {
   defaultLanguage: string;
   translationEnabled: boolean;
   translationApi: string;
+  plugins?: {
+    activeTheme?: string;
+    [key: string]: any;
+  };
 }
 
 const AVAILABLE_LANGUAGES = [
@@ -38,6 +42,9 @@ export default function SettingsPage() {
     translationApi: "minimax",
   });
 
+  const [themes, setThemes] = useState<Array<{id: string; name: string; description: string}>>([])
+  const [activeTheme, setActiveTheme] = useState("")
+
   useEffect(() => {
     fetch("/api/admin/settings")
       .then((r) => {
@@ -48,9 +55,21 @@ export default function SettingsPage() {
         return r.json();
       })
       .then((data) => {
-        if (data) setSettings(data);
+        if (data) {
+          setSettings(data);
+          setActiveTheme(data.plugins?.activeTheme || 'theme-editorial');
+        }
       })
       .finally(() => setLoading(false));
+
+    // 获取可用主题
+    fetch("/api/registry/asset?path=registry.json&v=1")
+      .then(r => r.json())
+      .then(data => {
+        const themeList = (data.plugins || []).filter((p: any) => p.category === 'theme')
+        setThemes(themeList)
+      })
+      .catch(() => {})
   }, [router]);
 
   async function handleSave() {
@@ -69,6 +88,26 @@ export default function SettingsPage() {
     } else {
       setMessage("Failed to save settings");
     }
+  }
+
+  async function handleThemeChange(themeId: string) {
+    setSaving(true)
+    const newSettings = { 
+      ...settings, 
+      plugins: { ...settings.plugins, activeTheme: themeId }
+    }
+    const res = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newSettings)
+    })
+    const data = await res.json()
+    if (data.success) {
+      setActiveTheme(themeId)
+      setMessage("主题已切换，刷新页面生效")
+      setTimeout(() => setMessage(""), 3000)
+    }
+    setSaving(false)
   }
 
   function handleLanguageToggle(code: string) {
@@ -103,6 +142,31 @@ export default function SettingsPage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Theme Selector */}
+          <div>
+            <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500 }}>主题 Theme</label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
+              {themes.map((theme) => (
+                <div
+                  key={theme.id}
+                  onClick={() => !saving && handleThemeChange(theme.id)}
+                  style={{
+                    padding: 16,
+                    border: `2px solid ${activeTheme === theme.id ? 'var(--primary)' : 'var(--border)'}`,
+                    borderRadius: 8,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    background: activeTheme === theme.id ? 'var(--secondary)' : 'transparent',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{theme.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{theme.description?.slice(0, 40) || ''}</div>
+                </div>
+              ))}
+              {themes.length === 0 && <div style={{ color: 'var(--muted-foreground)', fontSize: 14 }}>加载中...</div>}
+            </div>
+          </div>
+
           {/* Blog Title */}
           <div>
             <label style={{ display: "block", marginBottom: 8, fontSize: 14, fontWeight: 500 }}>Blog Title</label>
@@ -194,7 +258,7 @@ export default function SettingsPage() {
               {saving ? "Saving..." : "Save Settings"}
             </button>
             {message && (
-              <span style={{ fontSize: 14, color: message.includes("success") ? "#22c55e" : "#ef4444" }}>
+              <span style={{ fontSize: 14, color: message.includes("success") || message.includes("生效") ? "#22c55e" : "#ef4444" }}>
                 {message}
               </span>
             )}
