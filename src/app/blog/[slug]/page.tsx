@@ -3,6 +3,9 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { getPostBySlug, getAllPosts } from "@/lib/blog";
 import { MDXContent } from "@/components/mdx-content";
+
+// ISR：30秒后重新生成，插件开关 30s 内生效
+export const revalidate = 30;
 import { CommentSection } from "@/components/comment-section";
 import { ViewCount } from "@/components/view-count";
 import { AISummary } from "@/components/ai-summary";

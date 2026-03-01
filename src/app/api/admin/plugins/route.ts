@@ -2,6 +2,7 @@
 // 插件管理 API：列出注册表插件 + 安装/停用
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { validateToken } from '@/lib/auth'
 import { storage } from '@/lib/storage'
 
@@ -81,6 +82,10 @@ export async function POST(req: NextRequest) {
 
   settings.plugins = { ...(settings.plugins ?? {}), installed: next }
   await saveSettings(settings)
+
+  // 主动让所有博客页面缓存失效，插件开关立刻生效
+  revalidatePath('/blog', 'layout')
+  revalidatePath('/blog/[slug]', 'page')
 
   return NextResponse.json({ success: true, installed: next })
 }
